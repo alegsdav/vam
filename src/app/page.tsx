@@ -62,7 +62,7 @@ export default function LandingPage() {
             <span className="text-background font-bold text-lg">H</span>
           </div>
           <div>
-            <span className="font-semibold text-xl tracking-tight block">HealthBridge</span>
+            <span className="font-semibold text-xl tracking-tight block">Straits</span>
             <span className="text-xs text-muted-foreground">AI Infrastructure for Healthcare</span>
           </div>
         </div>
@@ -93,7 +93,7 @@ export default function LandingPage() {
           variants={fadeInUp}
           className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed"
         >
-          See how HealthBridge connects hospitals, doctors, AI startups, and developers 
+          See how Straits connects hospitals, doctors, AI startups, and developers 
           through a single integration layer.
         </motion.p>
       </motion.section>
@@ -188,7 +188,7 @@ export default function LandingPage() {
       {/* Footer */}
       <footer className="relative z-10 border-t py-8 px-8">
         <div className="max-w-6xl mx-auto flex items-center justify-center">
-          <span className="text-sm text-muted-foreground">HealthBridge Demo • AI Infrastructure for Healthcare</span>
+          <span className="text-sm text-muted-foreground">Straits Demo • AI Infrastructure for Healthcare</span>
         </div>
       </footer>
     </div>

@@ -23,7 +23,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const codeExamples = {
   script: `<!-- Add to your HTML -->
-<script src="https://cdn.healthbridge.ai/widget.js"></script>
+<script src="https://cdn.straits.ai/widget.js"></script>
 
 <!-- Place the widget anywhere in your app -->
 <health-ai-widget 
@@ -32,7 +32,7 @@ const codeExamples = {
   theme="light"
 ></health-ai-widget>`,
   
-  react: `import { HealthAIWidget } from '@healthbridge/react';
+  react: `import { HealthAIWidget } from '@straits/react';
 
 function PatientDashboard({ patientId }) {
   return (
@@ -52,7 +52,7 @@ function PatientDashboard({ patientId }) {
 }`,
   
   api: `// Direct API call for server-side integration
-const response = await fetch('https://api.healthbridge.ai/v1/predict', {
+const response = await fetch('https://api.straits.ai/v1/predict', {
   method: 'POST',
   headers: {
     'Authorization': 'Bearer YOUR_API_KEY',
@@ -61,7 +61,7 @@ const response = await fetch('https://api.healthbridge.ai/v1/predict', {
   body: JSON.stringify({
     app_id: 'sepsis-pro-123',
     patient_fhir_id: 'Patient/12345',
-    // HealthBridge handles FHIR data fetching automatically
+    // Straits handles FHIR data fetching automatically
   })
 });
 
@@ -69,7 +69,7 @@ const prediction = await response.json();
 // { risk_score: 0.73, confidence: 0.87, factors: [...] }`,
 
   webhook: `// Configure webhooks in your dashboard
-// HealthBridge will POST to your endpoint when:
+// Straits will POST to your endpoint when:
 // - New predictions are ready
 // - Risk scores change significantly
 // - Alerts are triggered
@@ -144,7 +144,7 @@ export default function DeveloperView() {
                 </div>
                 <div>
                   <h1 className="font-semibold text-lg">Developer Docs</h1>
-                  <p className="text-xs text-background/50">HealthBridge SDK</p>
+                  <p className="text-xs text-background/50">Straits SDK</p>
                 </div>
               </div>
             </div>
@@ -260,7 +260,7 @@ export default function DeveloperView() {
                   <span className="text-background/70">{'<script'}</span>
                   <span className="text-accent">{' src'}</span>
                   <span className="text-background">{'='}</span>
-                  <span className="text-accent">{'"https://cdn.healthbridge.ai/widget.js"'}</span>
+                  <span className="text-accent">{'"https://cdn.straits.ai/widget.js"'}</span>
                   <span className="text-background/70">{'></script>'}</span>
                   {'\n\n'}
                   <span className="text-background/50">{'<!-- Place the widget anywhere in your app -->'}</span>

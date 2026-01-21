@@ -182,7 +182,7 @@ export default function AdminView() {
               <span className="font-bold text-white">H</span>
             </div>
             <div>
-              <span className="font-semibold text-sm block">HealthBridge</span>
+              <span className="font-semibold text-sm block">Straits</span>
               <span className="text-xs text-background/60">Admin Console</span>
             </div>
           </Link>
@@ -580,7 +580,7 @@ export default function AdminView() {
                   
                   <h3 className="text-xl font-semibold mb-2">
                     {installState === "connecting" && "Connecting to Epic..."}
-                    {installState === "authenticating" && "Authenticating via HealthBridge..."}
+                    {installState === "authenticating" && "Authenticating via Straits..."}
                     {installState === "installing" && "Installing module..."}
                     {installState === "complete" && "Installation Complete!"}
                   </h3>

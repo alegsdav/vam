@@ -529,7 +529,7 @@ export default function StartupView() {
 
               <h2 className="text-4xl font-semibold mb-4">You're Live! 🎉</h2>
               <p className="text-xl text-background/60 mb-8">
-                Your AI model is now available to hospitals in the HealthBridge marketplace.
+                Your AI model is now available to hospitals in the Straits marketplace.
               </p>
 
               <Card className="bg-white/5 border-white/10">
@@ -553,7 +553,7 @@ export default function StartupView() {
                     <p className="text-sm text-background/60 mb-4">What happens next:</p>
                     <div className="text-left space-y-3">
                       {[
-                        "Your app will appear in the HealthBridge Marketplace",
+                        "Your app will appear in the Straits Marketplace",
                         "Hospital admins can install with one click",
                         "Your AI will receive real FHIR data through our secure bridge"
                       ].map((item, i) => (
