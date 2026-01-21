@@ -2,318 +2,197 @@
 
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { ArrowRight, Cpu, Shield, Zap, Layers, Building2, Sparkles } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Stethoscope, Building2, Rocket, Code2, ArrowRight, Sparkles } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 
-const fadeInUp = {
-  initial: { opacity: 0, y: 20 },
-  animate: { opacity: 1, y: 0 },
-  transition: { duration: 0.5 }
-};
-
-const stagger = {
-  animate: {
-    transition: {
-      staggerChildren: 0.1
-    }
+const roles = [
+  {
+    id: "doctor",
+    title: "Doctor",
+    subtitle: "The EHR View",
+    description: "See how AI appears inside your existing clinical workflow — no learning curve required.",
+    icon: Stethoscope,
+    color: "bg-blue-500",
+    href: "/doctor",
+    preview: "Epic-style dashboard with AI widget"
+  },
+  {
+    id: "admin",
+    title: "Admin",
+    subtitle: "The Marketplace",
+    description: "Browse and install AI apps for your hospital — no IT ticket required.",
+    icon: Building2,
+    color: "bg-accent",
+    href: "/admin",
+    preview: "One-click AI app installation"
+  },
+  {
+    id: "startup",
+    title: "AI Startup",
+    subtitle: "The Provider Portal",
+    description: "Upload your AI model and connect to hospital data in minutes — no integration work.",
+    icon: Rocket,
+    color: "bg-purple-500",
+    href: "/startup",
+    preview: "No-code data mapping interface"
+  },
+  {
+    id: "developer",
+    title: "Developer",
+    subtitle: "The SDK View",
+    description: "Embed healthcare AI into any software with a simple script tag.",
+    icon: Code2,
+    color: "bg-orange-500",
+    href: "/developer",
+    preview: "Copy-paste integration code"
   }
+];
+
+const fadeInUp = {
+  initial: { opacity: 0, y: 30 },
+  animate: { opacity: 1, y: 0 },
 };
 
 export default function LandingPage() {
   return (
     <div className="min-h-screen bg-background">
       {/* Subtle grid background */}
-      <div className="fixed inset-0 bg-[linear-gradient(to_right,#f0f0f0_1px,transparent_1px),linear-gradient(to_bottom,#f0f0f0_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_110%)]" />
+      <div className="fixed inset-0 bg-[linear-gradient(to_right,#f0f0f0_1px,transparent_1px),linear-gradient(to_bottom,#f0f0f0_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_80%_50%_at_50%_0%,#000_70%,transparent_110%)]" />
       
-      {/* Navigation */}
-      <nav className="relative z-10 flex items-center justify-between px-8 py-6 max-w-7xl mx-auto">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-foreground flex items-center justify-center">
-            <span className="text-background font-bold text-sm">V</span>
+      {/* Header */}
+      <header className="relative z-10 flex items-center justify-center px-8 py-8">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-foreground flex items-center justify-center">
+            <span className="text-background font-bold text-lg">V</span>
           </div>
-          <span className="font-semibold text-lg tracking-tight">VSee Cloud</span>
+          <div>
+            <span className="font-semibold text-xl tracking-tight block">HealthBridge</span>
+            <span className="text-xs text-muted-foreground">AI Infrastructure for Healthcare</span>
+          </div>
         </div>
-        <div className="flex items-center gap-6">
-          <Link href="/vam" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-            Marketplace
-          </Link>
-          <Link href="/portal" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-            Portal
-          </Link>
-          <Button variant="outline" size="sm" asChild>
-            <Link href="/vam/connect">Request Demo</Link>
-          </Button>
-        </div>
-      </nav>
+      </header>
 
-      {/* Hero Section */}
+      {/* Hero */}
       <motion.section 
-        className="relative z-10 pt-24 pb-32 px-8 max-w-7xl mx-auto"
+        className="relative z-10 pt-12 pb-16 px-8 text-center"
         initial="initial"
         animate="animate"
-        variants={stagger}
+        variants={{ animate: { transition: { staggerChildren: 0.1 } } }}
       >
-        <motion.div variants={fadeInUp} className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent-muted text-accent text-sm font-medium mb-8">
+        <motion.div variants={fadeInUp} className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-accent/10 text-accent text-sm font-medium mb-8">
           <Sparkles className="w-4 h-4" />
-          <span>Now in Private Preview</span>
+          <span>Interactive Demo</span>
         </motion.div>
         
         <motion.h1 
           variants={fadeInUp}
-          className="text-6xl md:text-7xl lg:text-8xl font-normal tracking-tight max-w-4xl leading-[1.05]"
+          className="text-5xl md:text-6xl lg:text-7xl font-normal tracking-tight max-w-4xl mx-auto leading-[1.1] mb-6"
           style={{ fontFamily: 'Instrument Serif, Georgia, serif' }}
         >
-          AI infrastructure for healthcare,{" "}
-          <span className="text-accent">simplified.</span>
+          One platform.{" "}
+          <span className="text-accent">Four perspectives.</span>
         </motion.h1>
         
         <motion.p 
           variants={fadeInUp}
-          className="text-xl text-muted-foreground max-w-2xl mt-8 leading-relaxed"
+          className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed"
         >
-          VSee Cloud transforms how healthcare organizations consume AI. 
-          Modular capabilities. Enterprise control. One integration target.
+          See how HealthBridge connects hospitals, doctors, AI startups, and developers 
+          through a single integration layer.
         </motion.p>
+      </motion.section>
+
+      {/* Role Selection Cards */}
+      <motion.section 
+        className="relative z-10 px-8 pb-24 max-w-6xl mx-auto"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.4 }}
+      >
+        <p className="text-center text-sm text-muted-foreground mb-8">Choose your perspective to explore the demo</p>
         
-        <motion.div variants={fadeInUp} className="flex items-center gap-4 mt-12">
-          <Button size="xl" variant="accent" asChild>
-            <Link href="/vam">
-              Explore Marketplace
-              <ArrowRight className="ml-2 w-5 h-5" />
-            </Link>
-          </Button>
-          <Button size="xl" variant="outline" asChild>
-            <Link href="/vam/connect">Connect with Us</Link>
-          </Button>
-        </motion.div>
-      </motion.section>
-
-      {/* Value Props */}
-      <motion.section 
-        className="relative z-10 py-24 px-8"
-        initial={{ opacity: 0 }}
-        whileInView={{ opacity: 1 }}
-        transition={{ duration: 0.8 }}
-        viewport={{ once: true }}
-      >
-        <div className="max-w-7xl mx-auto">
-          <div className="grid md:grid-cols-3 gap-6">
-            {[
-              {
-                icon: Layers,
-                title: "Modular by Design",
-                description: "AI capabilities exposed as building blocks. Enable what you need, disable what you don't."
-              },
-              {
-                icon: Shield,
-                title: "Enterprise Control",
-                description: "Full governance, permissioning, and audit trails. Healthcare-grade compliance built in."
-              },
-              {
-                icon: Zap,
-                title: "Zero Integration Friction",
-                description: "One API, one contract, one partner. VSee becomes your single AI integration target."
-              }
-            ].map((prop, i) => (
-              <motion.div 
-                key={i}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: i * 0.1 }}
-                viewport={{ once: true }}
-              >
-                <Card glass className="h-full">
-                  <CardContent className="p-8">
-                    <prop.icon className="w-10 h-10 text-accent mb-6" strokeWidth={1.5} />
-                    <h3 className="text-xl font-semibold mb-3">{prop.title}</h3>
-                    <p className="text-muted-foreground leading-relaxed">{prop.description}</p>
+        <div className="grid md:grid-cols-2 gap-6">
+          {roles.map((role, i) => (
+            <motion.div
+              key={role.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.5 + i * 0.1 }}
+            >
+              <Link href={role.href}>
+                <Card className="group h-full border-2 hover:border-foreground/20 hover:shadow-lg transition-all cursor-pointer overflow-hidden">
+                  <CardContent className="p-0">
+                    <div className="p-8">
+                      <div className="flex items-start justify-between mb-6">
+                        <div className={`w-14 h-14 rounded-2xl ${role.color} flex items-center justify-center`}>
+                          <role.icon className="w-7 h-7 text-white" />
+                        </div>
+                        <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-foreground group-hover:translate-x-1 transition-all" />
+                      </div>
+                      <div className="space-y-2 mb-4">
+                        <h2 className="text-2xl font-semibold">{role.title}</h2>
+                        <p className="text-sm text-accent font-medium">{role.subtitle}</p>
+                      </div>
+                      <p className="text-muted-foreground leading-relaxed">
+                        {role.description}
+                      </p>
+                    </div>
+                    <div className="px-8 py-4 bg-muted/50 border-t">
+                      <p className="text-xs text-muted-foreground">
+                        <span className="font-medium text-foreground">Preview:</span> {role.preview}
+                      </p>
+                    </div>
                   </CardContent>
                 </Card>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </motion.section>
-
-      {/* Two Paths Section */}
-      <motion.section 
-        className="relative z-10 py-24 px-8 bg-muted/50"
-        initial={{ opacity: 0 }}
-        whileInView={{ opacity: 1 }}
-        transition={{ duration: 0.8 }}
-        viewport={{ once: true }}
-      >
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-normal tracking-tight mb-4" style={{ fontFamily: 'Instrument Serif, Georgia, serif' }}>
-              Two ways to work with AI
-            </h2>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Whether you want VSee to host your AI-powered experience or integrate AI into your existing systems, we have you covered.
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-8">
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.5 }}
-              viewport={{ once: true }}
-            >
-              <Card className="h-full border-2 hover:border-accent/50 transition-colors">
-                <CardContent className="p-10">
-                  <div className="w-14 h-14 rounded-2xl bg-accent/10 flex items-center justify-center mb-6">
-                    <Building2 className="w-7 h-7 text-accent" />
-                  </div>
-                  <h3 className="text-2xl font-semibold mb-4">Build with VSee</h3>
-                  <p className="text-muted-foreground leading-relaxed mb-6">
-                    Let VSee host your AI-enabled healthcare environment. Toggle modules on and off, preview instantly. 
-                    No infrastructure, no integration work. Just value.
-                  </p>
-                  <ul className="space-y-3 text-sm">
-                    {["Fully hosted solution", "Visual module activation", "Instant preview", "Zero ops overhead"].map((item, i) => (
-                      <li key={i} className="flex items-center gap-3">
-                        <div className="w-1.5 h-1.5 rounded-full bg-accent" />
-                        {item}
-                      </li>
-                    ))}
-                  </ul>
-                </CardContent>
-              </Card>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.5 }}
-              viewport={{ once: true }}
-            >
-              <Card className="h-full border-2 hover:border-accent/50 transition-colors">
-                <CardContent className="p-10">
-                  <div className="w-14 h-14 rounded-2xl bg-foreground/5 flex items-center justify-center mb-6">
-                    <Cpu className="w-7 h-7 text-foreground" />
-                  </div>
-                  <h3 className="text-2xl font-semibold mb-4">Integrate into Existing</h3>
-                  <p className="text-muted-foreground leading-relaxed mb-6">
-                    Keep your systems, add our AI. Every module is headless, accessible via REST APIs and SDKs. 
-                    VSee becomes your single AI integration target.
-                  </p>
-                  <ul className="space-y-3 text-sm">
-                    {["REST APIs & SDKs", "Works with any system", "Vendor-agnostic modules", "Enterprise SLAs"].map((item, i) => (
-                      <li key={i} className="flex items-center gap-3">
-                        <div className="w-1.5 h-1.5 rounded-full bg-foreground" />
-                        {item}
-                      </li>
-                    ))}
-                  </ul>
-                </CardContent>
-              </Card>
-            </motion.div>
-          </div>
-        </div>
-      </motion.section>
-
-      {/* Module Preview */}
-      <motion.section 
-        className="relative z-10 py-24 px-8"
-        initial={{ opacity: 0 }}
-        whileInView={{ opacity: 1 }}
-        transition={{ duration: 0.8 }}
-        viewport={{ once: true }}
-      >
-        <div className="max-w-7xl mx-auto">
-          <div className="flex items-end justify-between mb-12">
-            <div>
-              <h2 className="text-4xl md:text-5xl font-normal tracking-tight mb-4" style={{ fontFamily: 'Instrument Serif, Georgia, serif' }}>
-                AI as building blocks
-              </h2>
-              <p className="text-lg text-muted-foreground max-w-xl">
-                15+ modular AI capabilities, ready to activate. Clinical, administrative, analytics — all standardized, all controlled.
-              </p>
-            </div>
-            <Button variant="outline" asChild>
-              <Link href="/vam">
-                View All Modules
-                <ArrowRight className="ml-2 w-4 h-4" />
               </Link>
-            </Button>
-          </div>
-
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-            {[
-              "Clinical Note Summarization",
-              "Patient Risk Scoring",
-              "Visit Transcription",
-              "Coding & Billing",
-              "Prior Auth",
-              "Symptom Extraction",
-              "Follow-up Recommendations",
-              "Medication Reconciliation",
-              "Readmission Prediction",
-              "Population Health"
-            ].map((module, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, scale: 0.95 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.3, delay: i * 0.05 }}
-                viewport={{ once: true }}
-              >
-                <Card glass className="group hover:bg-white transition-colors cursor-pointer">
-                  <CardContent className="p-5">
-                    <div className="w-2 h-2 rounded-full bg-accent mb-4 group-hover:scale-125 transition-transform" />
-                    <p className="text-sm font-medium leading-snug">{module}</p>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
-          </div>
+            </motion.div>
+          ))}
         </div>
       </motion.section>
 
-      {/* CTA Section */}
+      {/* Pitch Flow Hint */}
       <motion.section 
-        className="relative z-10 py-32 px-8"
+        className="relative z-10 px-8 pb-24"
         initial={{ opacity: 0 }}
-        whileInView={{ opacity: 1 }}
-        transition={{ duration: 0.8 }}
-        viewport={{ once: true }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.8 }}
       >
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-4xl md:text-5xl lg:text-6xl font-normal tracking-tight mb-6" style={{ fontFamily: 'Instrument Serif, Georgia, serif' }}>
-            Ready to make AI inevitable?
-          </h2>
-          <p className="text-xl text-muted-foreground mb-10 max-w-2xl mx-auto">
-            Join the healthcare organizations already using VSee Cloud to simplify AI adoption.
-          </p>
-          <div className="flex items-center justify-center gap-4">
-            <Button size="xl" variant="accent" asChild>
-              <Link href="/vam/connect">
-                Request Access
-                <ArrowRight className="ml-2 w-5 h-5" />
-              </Link>
-            </Button>
-            <Button size="xl" variant="outline" asChild>
-              <Link href="/vam">Explore Marketplace</Link>
-            </Button>
-          </div>
+        <div className="max-w-4xl mx-auto">
+          <Card className="bg-foreground text-background">
+            <CardContent className="p-8">
+              <h3 className="text-lg font-semibold mb-4">Recommended Demo Flow</h3>
+              <div className="grid md:grid-cols-3 gap-6 text-sm">
+                <div className="flex gap-3">
+                  <div className="w-6 h-6 rounded-full bg-background/20 flex items-center justify-center flex-shrink-0 text-xs font-bold">1</div>
+                  <div>
+                    <p className="font-medium mb-1">Start with Admin</p>
+                    <p className="text-background/70">"I browse the store, find Sepsis AI, click Install — no IT ticket."</p>
+                  </div>
+                </div>
+                <div className="flex gap-3">
+                  <div className="w-6 h-6 rounded-full bg-background/20 flex items-center justify-center flex-shrink-0 text-xs font-bold">2</div>
+                  <div>
+                    <p className="font-medium mb-1">Show Doctor View</p>
+                    <p className="text-background/70">"Now the AI widget appears inside Epic, reading real-time data."</p>
+                  </div>
+                </div>
+                <div className="flex gap-3">
+                  <div className="w-6 h-6 rounded-full bg-background/20 flex items-center justify-center flex-shrink-0 text-xs font-bold">3</div>
+                  <div>
+                    <p className="font-medium mb-1">Explain Startup Side</p>
+                    <p className="text-background/70">"The startup logged in, pasted their API, mapped data in 5 min."</p>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </motion.section>
 
       {/* Footer */}
-      <footer className="relative z-10 border-t py-12 px-8">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded bg-foreground flex items-center justify-center">
-              <span className="text-background font-bold text-xs">V</span>
-            </div>
-            <span className="text-sm text-muted-foreground">© 2026 VSee. Enterprise healthcare infrastructure.</span>
-          </div>
-          <div className="flex items-center gap-6 text-sm text-muted-foreground">
-            <Link href="/vam" className="hover:text-foreground transition-colors">Marketplace</Link>
-            <Link href="/vam/connect" className="hover:text-foreground transition-colors">Contact</Link>
-          </div>
+      <footer className="relative z-10 border-t py-8 px-8">
+        <div className="max-w-6xl mx-auto flex items-center justify-center">
+          <span className="text-sm text-muted-foreground">HealthBridge Demo • VSee AI Infrastructure</span>
         </div>
       </footer>
     </div>
