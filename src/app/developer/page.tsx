@@ -8,14 +8,13 @@ import {
   Code2, 
   Copy, 
   Check,
-  Book,
   Terminal,
   Globe,
   Zap,
   Shield,
   ChevronRight,
-  Play,
-  ExternalLink
+  ExternalLink,
+  Book
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -128,32 +127,32 @@ export default function DeveloperView() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0d1117] text-white">
+    <div className="min-h-screen bg-foreground text-background">
       {/* Header */}
-      <header className="border-b border-white/10 sticky top-0 z-40 bg-[#0d1117]/80 backdrop-blur-lg">
+      <header className="border-b border-white/10 sticky top-0 z-40 bg-foreground/80 backdrop-blur-lg">
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-6">
-              <Link href="/" className="flex items-center gap-2 text-white/50 hover:text-white transition-colors">
+              <Link href="/" className="flex items-center gap-2 text-background/50 hover:text-background transition-colors">
                 <ArrowLeft className="w-4 h-4" />
                 <span className="text-sm">Exit Demo</span>
               </Link>
               <div className="w-px h-6 bg-white/20" />
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-orange-500 flex items-center justify-center">
+                <div className="w-10 h-10 rounded-xl bg-accent flex items-center justify-center">
                   <Code2 className="w-5 h-5 text-white" />
                 </div>
                 <div>
                   <h1 className="font-semibold text-lg">Developer Docs</h1>
-                  <p className="text-xs text-white/50">HealthBridge SDK</p>
+                  <p className="text-xs text-background/50">HealthBridge SDK</p>
                 </div>
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <Badge className="bg-orange-500/20 text-orange-300 border-orange-500/30">
+              <Badge className="bg-white/10 text-background/70 border-0">
                 v2.4.1
               </Badge>
-              <Button size="sm" className="bg-orange-500 hover:bg-orange-600">
+              <Button size="sm" className="bg-accent hover:bg-accent/90 text-white">
                 Get API Key
               </Button>
             </div>
@@ -171,13 +170,13 @@ export default function DeveloperView() {
                 href={section.href}
                 className={`flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-colors ${
                   i === 0 
-                    ? 'bg-orange-500/10 text-orange-400' 
-                    : 'text-white/60 hover:text-white hover:bg-white/5'
+                    ? 'bg-accent/10 text-accent' 
+                    : 'text-background/60 hover:text-background hover:bg-white/5'
                 }`}
               >
                 <span>{section.title}</span>
                 {section.badge && (
-                  <Badge variant="secondary" className="text-xs bg-white/10">
+                  <Badge variant="secondary" className="text-xs bg-white/10 text-background/60 border-0">
                     {section.badge}
                   </Badge>
                 )}
@@ -194,13 +193,13 @@ export default function DeveloperView() {
             animate={{ opacity: 1, y: 0 }}
             className="mb-12"
           >
-            <Badge className="bg-orange-500/20 text-orange-300 border-orange-500/30 mb-4">
+            <Badge className="bg-accent/10 text-accent border-0 mb-4">
               Quick Start
             </Badge>
             <h1 className="text-4xl font-bold mb-4">
               Add Healthcare AI to Any App
             </h1>
-            <p className="text-xl text-white/60 mb-6">
+            <p className="text-xl text-background/60 mb-6">
               One script tag. Instant AI predictions. Works with any medical software.
             </p>
 
@@ -215,9 +214,9 @@ export default function DeveloperView() {
                 >
                   <Card className="bg-white/5 border-white/10 h-full">
                     <CardContent className="p-4">
-                      <feature.icon className="w-8 h-8 text-orange-400 mb-3" />
+                      <feature.icon className="w-8 h-8 text-accent mb-3" />
                       <h3 className="font-semibold mb-1">{feature.title}</h3>
-                      <p className="text-sm text-white/50">{feature.description}</p>
+                      <p className="text-sm text-background/50">{feature.description}</p>
                     </CardContent>
                   </Card>
                 </motion.div>
@@ -233,22 +232,22 @@ export default function DeveloperView() {
             className="mb-12"
           >
             <h2 className="text-2xl font-semibold mb-4">Quickest Integration (2 lines)</h2>
-            <p className="text-white/60 mb-4">
+            <p className="text-background/60 mb-4">
               Copy this into your HTML and you're done. The widget handles authentication, 
               data fetching, and rendering automatically.
             </p>
 
-            <Card className="bg-[#161b22] border-white/10 overflow-hidden">
+            <Card className="bg-black/40 border-white/10 overflow-hidden">
               <div className="flex items-center justify-between px-4 py-2 bg-white/5 border-b border-white/10">
-                <span className="text-sm text-white/50">index.html</span>
+                <span className="text-sm text-background/50">index.html</span>
                 <Button
                   size="sm"
                   variant="ghost"
-                  className="text-white/50 hover:text-white"
+                  className="text-background/50 hover:text-background hover:bg-white/10"
                   onClick={() => copyCode(codeExamples.script, "script")}
                 >
                   {copiedCode === "script" ? (
-                    <Check className="w-4 h-4 text-green-400" />
+                    <Check className="w-4 h-4 text-accent" />
                   ) : (
                     <Copy className="w-4 h-4" />
                   )}
@@ -256,41 +255,41 @@ export default function DeveloperView() {
               </div>
               <pre className="p-4 overflow-x-auto">
                 <code className="text-sm font-mono">
-                  <span className="text-gray-500">{'<!-- Add to your HTML -->'}</span>
+                  <span className="text-background/50">{'<!-- Add to your HTML -->'}</span>
                   {'\n'}
-                  <span className="text-pink-400">{'<script'}</span>
-                  <span className="text-blue-300">{' src'}</span>
-                  <span className="text-white">{'='}</span>
-                  <span className="text-green-400">{'"https://cdn.healthbridge.ai/widget.js"'}</span>
-                  <span className="text-pink-400">{'></script>'}</span>
+                  <span className="text-background/70">{'<script'}</span>
+                  <span className="text-accent">{' src'}</span>
+                  <span className="text-background">{'='}</span>
+                  <span className="text-accent">{'"https://cdn.healthbridge.ai/widget.js"'}</span>
+                  <span className="text-background/70">{'></script>'}</span>
                   {'\n\n'}
-                  <span className="text-gray-500">{'<!-- Place the widget anywhere in your app -->'}</span>
+                  <span className="text-background/50">{'<!-- Place the widget anywhere in your app -->'}</span>
                   {'\n'}
-                  <span className="text-pink-400">{'<health-ai-widget'}</span>
+                  <span className="text-background/70">{'<health-ai-widget'}</span>
                   {'\n'}
-                  <span className="text-blue-300">{'  app-id'}</span>
-                  <span className="text-white">{'='}</span>
-                  <span className="text-green-400">{'"sepsis-pro-123"'}</span>
+                  <span className="text-accent">{'  app-id'}</span>
+                  <span className="text-background">{'='}</span>
+                  <span className="text-accent">{'"sepsis-pro-123"'}</span>
                   {'\n'}
-                  <span className="text-blue-300">{'  patient-id'}</span>
-                  <span className="text-white">{'='}</span>
-                  <span className="text-green-400">{'"{{patient.id}}"'}</span>
+                  <span className="text-accent">{'  patient-id'}</span>
+                  <span className="text-background">{'='}</span>
+                  <span className="text-accent">{'"{{patient.id}}"'}</span>
                   {'\n'}
-                  <span className="text-blue-300">{'  theme'}</span>
-                  <span className="text-white">{'='}</span>
-                  <span className="text-green-400">{'"light"'}</span>
+                  <span className="text-accent">{'  theme'}</span>
+                  <span className="text-background">{'='}</span>
+                  <span className="text-accent">{'"light"'}</span>
                   {'\n'}
-                  <span className="text-pink-400">{'></health-ai-widget>'}</span>
+                  <span className="text-background/70">{'></health-ai-widget>'}</span>
                 </code>
               </pre>
             </Card>
 
-            <div className="mt-4 p-4 bg-orange-500/10 border border-orange-500/30 rounded-lg">
+            <div className="mt-4 p-4 bg-accent/10 border border-accent/30 rounded-lg">
               <div className="flex items-start gap-3">
-                <Zap className="w-5 h-5 text-orange-400 mt-0.5" />
+                <Zap className="w-5 h-5 text-accent mt-0.5" />
                 <div>
-                  <p className="font-medium text-orange-300">That's it!</p>
-                  <p className="text-sm text-white/60 mt-1">
+                  <p className="font-medium text-accent">That's it!</p>
+                  <p className="text-sm text-background/60 mt-1">
                     The widget automatically connects to your FHIR server, fetches patient data, 
                     runs the AI prediction, and displays results. No backend code required.
                   </p>
@@ -310,127 +309,75 @@ export default function DeveloperView() {
             
             <Tabs defaultValue="react" className="w-full">
               <TabsList className="bg-white/5 border border-white/10">
-                <TabsTrigger value="react" className="data-[state=active]:bg-white/10">React</TabsTrigger>
-                <TabsTrigger value="api" className="data-[state=active]:bg-white/10">REST API</TabsTrigger>
-                <TabsTrigger value="webhook" className="data-[state=active]:bg-white/10">Webhooks</TabsTrigger>
+                <TabsTrigger value="react" className="data-[state=active]:bg-white/10 data-[state=active]:text-background">React</TabsTrigger>
+                <TabsTrigger value="api" className="data-[state=active]:bg-white/10 data-[state=active]:text-background">REST API</TabsTrigger>
+                <TabsTrigger value="webhook" className="data-[state=active]:bg-white/10 data-[state=active]:text-background">Webhooks</TabsTrigger>
               </TabsList>
 
               <TabsContent value="react" className="mt-4">
-                <Card className="bg-[#161b22] border-white/10 overflow-hidden">
+                <Card className="bg-black/40 border-white/10 overflow-hidden">
                   <div className="flex items-center justify-between px-4 py-2 bg-white/5 border-b border-white/10">
-                    <span className="text-sm text-white/50">PatientDashboard.jsx</span>
+                    <span className="text-sm text-background/50">PatientDashboard.jsx</span>
                     <Button
                       size="sm"
                       variant="ghost"
-                      className="text-white/50 hover:text-white"
+                      className="text-background/50 hover:text-background hover:bg-white/10"
                       onClick={() => copyCode(codeExamples.react, "react")}
                     >
                       {copiedCode === "react" ? (
-                        <Check className="w-4 h-4 text-green-400" />
+                        <Check className="w-4 h-4 text-accent" />
                       ) : (
                         <Copy className="w-4 h-4" />
                       )}
                     </Button>
                   </div>
-                  <pre className="p-4 overflow-x-auto text-sm font-mono">
-                    <code>
-                      <span className="text-pink-400">import</span>
-                      <span className="text-white">{' { HealthAIWidget } '}</span>
-                      <span className="text-pink-400">from</span>
-                      <span className="text-green-400">{" '@healthbridge/react'"}</span>
-                      <span className="text-white">;</span>
-                      {'\n\n'}
-                      <span className="text-pink-400">function</span>
-                      <span className="text-blue-300">{' PatientDashboard'}</span>
-                      <span className="text-white">{'({ patientId }) {'}</span>
-                      {'\n'}
-                      <span className="text-pink-400">{'  return'}</span>
-                      <span className="text-white">{' ('}</span>
-                      {'\n'}
-                      <span className="text-white">{'    <'}</span>
-                      <span className="text-blue-300">{'div'}</span>
-                      <span className="text-white">{' className='}</span>
-                      <span className="text-green-400">{'"dashboard"'}</span>
-                      <span className="text-white">{'>'}</span>
-                      {'\n'}
-                      <span className="text-white">{'      <'}</span>
-                      <span className="text-yellow-300">{'PatientHeader'}</span>
-                      <span className="text-white">{' />'}</span>
-                      {'\n\n'}
-                      <span className="text-gray-500">{'      {/* Add AI predictions with one component */}'}</span>
-                      {'\n'}
-                      <span className="text-white">{'      <'}</span>
-                      <span className="text-yellow-300">{'HealthAIWidget'}</span>
-                      {'\n'}
-                      <span className="text-blue-300">{'        appId'}</span>
-                      <span className="text-white">{'='}</span>
-                      <span className="text-green-400">{'"sepsis-pro-123"'}</span>
-                      {'\n'}
-                      <span className="text-blue-300">{'        patientId'}</span>
-                      <span className="text-white">{'={patientId}'}</span>
-                      {'\n'}
-                      <span className="text-blue-300">{'        onPrediction'}</span>
-                      <span className="text-white">{'={(result) => console.log(result)}'}</span>
-                      {'\n'}
-                      <span className="text-white">{'      />'}</span>
-                      {'\n\n'}
-                      <span className="text-white">{'      <'}</span>
-                      <span className="text-yellow-300">{'VitalsChart'}</span>
-                      <span className="text-white">{' />'}</span>
-                      {'\n'}
-                      <span className="text-white">{'    </'}</span>
-                      <span className="text-blue-300">{'div'}</span>
-                      <span className="text-white">{'>'}</span>
-                      {'\n'}
-                      <span className="text-white">{'  );'}</span>
-                      {'\n'}
-                      <span className="text-white">{'}'}</span>
-                    </code>
+                  <pre className="p-4 overflow-x-auto text-sm font-mono text-background/80">
+                    {codeExamples.react}
                   </pre>
                 </Card>
               </TabsContent>
 
               <TabsContent value="api" className="mt-4">
-                <Card className="bg-[#161b22] border-white/10 overflow-hidden">
+                <Card className="bg-black/40 border-white/10 overflow-hidden">
                   <div className="flex items-center justify-between px-4 py-2 bg-white/5 border-b border-white/10">
-                    <span className="text-sm text-white/50">server.js</span>
+                    <span className="text-sm text-background/50">server.js</span>
                     <Button
                       size="sm"
                       variant="ghost"
-                      className="text-white/50 hover:text-white"
+                      className="text-background/50 hover:text-background hover:bg-white/10"
                       onClick={() => copyCode(codeExamples.api, "api")}
                     >
                       {copiedCode === "api" ? (
-                        <Check className="w-4 h-4 text-green-400" />
+                        <Check className="w-4 h-4 text-accent" />
                       ) : (
                         <Copy className="w-4 h-4" />
                       )}
                     </Button>
                   </div>
-                  <pre className="p-4 overflow-x-auto text-sm font-mono text-white/80">
+                  <pre className="p-4 overflow-x-auto text-sm font-mono text-background/80">
                     {codeExamples.api}
                   </pre>
                 </Card>
               </TabsContent>
 
               <TabsContent value="webhook" className="mt-4">
-                <Card className="bg-[#161b22] border-white/10 overflow-hidden">
+                <Card className="bg-black/40 border-white/10 overflow-hidden">
                   <div className="flex items-center justify-between px-4 py-2 bg-white/5 border-b border-white/10">
-                    <span className="text-sm text-white/50">webhook-payload.json</span>
+                    <span className="text-sm text-background/50">webhook-payload.json</span>
                     <Button
                       size="sm"
                       variant="ghost"
-                      className="text-white/50 hover:text-white"
+                      className="text-background/50 hover:text-background hover:bg-white/10"
                       onClick={() => copyCode(codeExamples.webhook, "webhook")}
                     >
                       {copiedCode === "webhook" ? (
-                        <Check className="w-4 h-4 text-green-400" />
+                        <Check className="w-4 h-4 text-accent" />
                       ) : (
                         <Copy className="w-4 h-4" />
                       )}
                     </Button>
                   </div>
-                  <pre className="p-4 overflow-x-auto text-sm font-mono text-white/80">
+                  <pre className="p-4 overflow-x-auto text-sm font-mono text-background/80">
                     {codeExamples.webhook}
                   </pre>
                 </Card>
@@ -454,10 +401,10 @@ export default function DeveloperView() {
               ].map((item, i) => (
                 <Card key={i} className="bg-white/5 border-white/10">
                   <CardContent className="p-4 flex items-start gap-3">
-                    <ChevronRight className="w-5 h-5 text-orange-400 mt-0.5" />
+                    <ChevronRight className="w-5 h-5 text-accent mt-0.5" />
                     <div>
                       <h3 className="font-semibold">{item.title}</h3>
-                      <p className="text-sm text-white/50">{item.desc}</p>
+                      <p className="text-sm text-background/50">{item.desc}</p>
                     </div>
                   </CardContent>
                 </Card>
@@ -470,18 +417,18 @@ export default function DeveloperView() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5 }}
-            className="mt-12 p-8 rounded-2xl bg-gradient-to-r from-orange-500/20 to-red-500/20 border border-orange-500/30 text-center"
+            className="mt-12 p-8 rounded-2xl bg-white/5 border border-white/10 text-center"
           >
             <h3 className="text-2xl font-semibold mb-2">Ready to get started?</h3>
-            <p className="text-white/60 mb-6">
+            <p className="text-background/60 mb-6">
               Get your API key and start building in under 5 minutes.
             </p>
             <div className="flex items-center justify-center gap-4">
-              <Button className="bg-orange-500 hover:bg-orange-600">
+              <Button className="bg-accent hover:bg-accent/90 text-white">
                 Get API Key
                 <ExternalLink className="w-4 h-4 ml-2" />
               </Button>
-              <Button variant="outline" className="border-white/20 text-white hover:bg-white/10" asChild>
+              <Button variant="outline" className="border-white/20 text-background hover:bg-white/10 bg-transparent" asChild>
                 <Link href="/">
                   <ArrowLeft className="w-4 h-4 mr-2" />
                   Back to Demo

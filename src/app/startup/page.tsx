@@ -6,18 +6,12 @@ import Link from "next/link";
 import { 
   ArrowLeft, 
   Rocket, 
-  Upload, 
   Link2, 
   Check, 
-  ChevronRight,
   Database,
   Code2,
   Zap,
-  Settings,
-  BarChart3,
-  Globe,
   CheckCircle2,
-  Circle,
   ArrowRight,
   Loader2,
   Play,
@@ -51,7 +45,6 @@ const fhirFields = [
   { id: "conditions", label: "Condition.code", type: "CodeableConcept", description: "FHIR conditions" },
 ];
 
-// Pre-defined mappings that will "auto-connect"
 const autoMappings: Record<string, string> = {
   "patient_age": "birthDate",
   "patient_gender": "gender",
@@ -73,13 +66,11 @@ export default function StartupView() {
   const [isAutoMapping, setIsAutoMapping] = useState(false);
   const [testResult, setTestResult] = useState<"idle" | "testing" | "success">("idle");
   
-  // Refs for drawing lines
   const leftRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const rightRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const containerRef = useRef<HTMLDivElement>(null);
   const [lines, setLines] = useState<{from: string, to: string, x1: number, y1: number, x2: number, y2: number}[]>([]);
 
-  // Update lines when mappings change
   useEffect(() => {
     const updateLines = () => {
       if (!containerRef.current) return;
@@ -117,7 +108,6 @@ export default function StartupView() {
   const handleAutoMap = async () => {
     setIsAutoMapping(true);
     
-    // Animate adding mappings one by one
     for (const [aiField, fhirField] of Object.entries(autoMappings)) {
       await new Promise(r => setTimeout(r, 300));
       setMappings(prev => ({ ...prev, [aiField]: fhirField }));
@@ -149,28 +139,28 @@ export default function StartupView() {
   ];
 
   return (
-    <div className="min-h-screen bg-slate-900 text-white">
+    <div className="min-h-screen bg-foreground text-background">
       {/* Header */}
       <header className="border-b border-white/10">
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-6">
-              <Link href="/" className="flex items-center gap-2 text-white/50 hover:text-white transition-colors">
+              <Link href="/" className="flex items-center gap-2 text-background/50 hover:text-background transition-colors">
                 <ArrowLeft className="w-4 h-4" />
                 <span className="text-sm">Exit Demo</span>
               </Link>
               <div className="w-px h-6 bg-white/20" />
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-purple-500 flex items-center justify-center">
+                <div className="w-10 h-10 rounded-xl bg-accent flex items-center justify-center">
                   <Rocket className="w-5 h-5 text-white" />
                 </div>
                 <div>
                   <h1 className="font-semibold text-lg">Developer Console</h1>
-                  <p className="text-xs text-white/50">AI Provider Portal</p>
+                  <p className="text-xs text-background/50">AI Provider Portal</p>
                 </div>
               </div>
             </div>
-            <Badge className="bg-purple-500/20 text-purple-300 border-purple-500/30">
+            <Badge className="bg-white/10 text-background/70 border-0">
               Demo Mode
             </Badge>
           </div>
@@ -191,8 +181,8 @@ export default function StartupView() {
                   <div className="flex items-center gap-3">
                     <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${
                       isComplete ? 'bg-accent text-white' :
-                      isCurrent ? 'bg-purple-500 text-white' :
-                      'bg-white/10 text-white/50'
+                      isCurrent ? 'bg-white text-foreground' :
+                      'bg-white/10 text-background/50'
                     }`}>
                       {isComplete ? (
                         <Check className="w-5 h-5" />
@@ -200,7 +190,7 @@ export default function StartupView() {
                         <s.icon className="w-5 h-5" />
                       )}
                     </div>
-                    <span className={`text-sm font-medium ${isCurrent ? 'text-white' : 'text-white/50'}`}>
+                    <span className={`text-sm font-medium ${isCurrent ? 'text-background' : 'text-background/50'}`}>
                       {s.label}
                     </span>
                   </div>
@@ -228,7 +218,7 @@ export default function StartupView() {
             >
               <div className="text-center mb-8">
                 <h2 className="text-3xl font-semibold mb-2">Connect Your AI Model</h2>
-                <p className="text-white/60">Paste your API endpoint and we'll handle the rest</p>
+                <p className="text-background/60">Paste your API endpoint and we'll handle the rest</p>
               </div>
 
               <Card className="bg-white/5 border-white/10">
@@ -239,7 +229,7 @@ export default function StartupView() {
                       <Input
                         value={apiUrl}
                         onChange={(e) => setApiUrl(e.target.value)}
-                        className="bg-white/10 border-white/20 text-white placeholder:text-white/40 h-12"
+                        className="bg-white/10 border-white/20 text-background placeholder:text-background/40 h-12"
                         placeholder="https://api.yourcompany.com/predict"
                       />
                     </div>
@@ -248,7 +238,7 @@ export default function StartupView() {
                       <label className="block text-sm font-medium mb-2">API Key (optional)</label>
                       <Input
                         type="password"
-                        className="bg-white/10 border-white/20 text-white placeholder:text-white/40 h-12"
+                        className="bg-white/10 border-white/20 text-background placeholder:text-background/40 h-12"
                         placeholder="sk-..."
                         defaultValue="sk-demo-key-12345"
                       />
@@ -259,7 +249,7 @@ export default function StartupView() {
                         <Sparkles className="w-5 h-5 text-accent mt-0.5" />
                         <div>
                           <p className="font-medium text-accent">Auto-detected: Sepsis Prediction Model</p>
-                          <p className="text-sm text-white/60 mt-1">
+                          <p className="text-sm text-background/60 mt-1">
                             We detected your model accepts vital signs and returns risk scores. 
                             We'll auto-map compatible fields in the next step.
                           </p>
@@ -268,7 +258,7 @@ export default function StartupView() {
                     </div>
 
                     <Button 
-                      className="w-full h-12 bg-purple-500 hover:bg-purple-600"
+                      className="w-full h-12 bg-white text-foreground hover:bg-white/90"
                       onClick={() => setStep("mapping")}
                     >
                       Continue to Data Mapping
@@ -291,11 +281,11 @@ export default function StartupView() {
               <div className="flex items-center justify-between mb-6">
                 <div>
                   <h2 className="text-2xl font-semibold mb-1">Map Your Data Fields</h2>
-                  <p className="text-white/60">Connect your AI input fields to FHIR hospital data</p>
+                  <p className="text-background/60">Connect your AI input fields to FHIR hospital data</p>
                 </div>
                 <Button 
                   variant="outline" 
-                  className="border-accent text-accent hover:bg-accent/10"
+                  className="border-accent text-accent hover:bg-accent/10 bg-transparent"
                   onClick={handleAutoMap}
                   disabled={isAutoMapping || Object.keys(mappings).length > 0}
                 >
@@ -313,7 +303,6 @@ export default function StartupView() {
                 </Button>
               </div>
 
-              {/* Data Mapper Visual */}
               <Card className="bg-white/5 border-white/10 overflow-hidden">
                 <CardContent className="p-0">
                   <div 
@@ -322,7 +311,7 @@ export default function StartupView() {
                   >
                     {/* SVG Lines */}
                     <svg className="absolute inset-0 pointer-events-none z-10">
-                      {lines.map((line, i) => (
+                      {lines.map((line) => (
                         <motion.path
                           key={`${line.from}-${line.to}`}
                           initial={{ pathLength: 0, opacity: 0 }}
@@ -339,7 +328,7 @@ export default function StartupView() {
                     {/* Left Column - AI Input */}
                     <div>
                       <div className="flex items-center gap-2 mb-4 pb-2 border-b border-white/10">
-                        <Code2 className="w-5 h-5 text-purple-400" />
+                        <Code2 className="w-5 h-5 text-background/70" />
                         <h3 className="font-semibold">My AI Input (JSON)</h3>
                       </div>
                       <div className="space-y-2">
@@ -356,17 +345,17 @@ export default function StartupView() {
                                 isMapped 
                                   ? 'bg-accent/10 border-accent/50' 
                                   : isSelected
-                                    ? 'bg-purple-500/20 border-purple-500'
+                                    ? 'bg-white/10 border-white'
                                     : 'bg-white/5 border-white/10 hover:border-white/30'
                               }`}
                             >
                               <div className="flex items-center justify-between">
                                 <div>
-                                  <code className="text-sm font-mono text-white">{field.label}</code>
-                                  <p className="text-xs text-white/40 mt-0.5">{field.type} • {field.description}</p>
+                                  <code className="text-sm font-mono text-background">{field.label}</code>
+                                  <p className="text-xs text-background/40 mt-0.5">{field.type} • {field.description}</p>
                                 </div>
                                 <div className={`w-3 h-3 rounded-full ${
-                                  isMapped ? 'bg-accent' : isSelected ? 'bg-purple-500' : 'bg-white/20'
+                                  isMapped ? 'bg-accent' : isSelected ? 'bg-white' : 'bg-white/20'
                                 }`} />
                               </div>
                             </div>
@@ -378,7 +367,7 @@ export default function StartupView() {
                     {/* Right Column - FHIR */}
                     <div>
                       <div className="flex items-center gap-2 mb-4 pb-2 border-b border-white/10">
-                        <Database className="w-5 h-5 text-blue-400" />
+                        <Database className="w-5 h-5 text-background/70" />
                         <h3 className="font-semibold">Hospital Data (FHIR)</h3>
                       </div>
                       <div className="space-y-2">
@@ -395,15 +384,15 @@ export default function StartupView() {
                                 isMapped 
                                   ? 'bg-accent/10 border-accent/50' 
                                   : selectedField
-                                    ? 'bg-blue-500/10 border-blue-500/50 hover:bg-blue-500/20'
+                                    ? 'bg-white/5 border-white/30 hover:bg-white/10'
                                     : 'bg-white/5 border-white/10 hover:border-white/30'
                               }`}
                             >
                               <div className="flex items-center justify-between">
                                 <div className={`w-3 h-3 rounded-full ${isMapped ? 'bg-accent' : 'bg-white/20'}`} />
                                 <div className="text-right flex-1 ml-3">
-                                  <code className="text-sm font-mono text-white">{field.label}</code>
-                                  <p className="text-xs text-white/40 mt-0.5">{field.type} • {field.description}</p>
+                                  <code className="text-sm font-mono text-background">{field.label}</code>
+                                  <p className="text-xs text-background/40 mt-0.5">{field.type} • {field.description}</p>
                                 </div>
                               </div>
                             </div>
@@ -413,11 +402,10 @@ export default function StartupView() {
                     </div>
                   </div>
 
-                  {/* Instructions */}
                   <div className="px-8 py-4 bg-white/5 border-t border-white/10">
-                    <p className="text-sm text-white/60">
+                    <p className="text-sm text-background/60">
                       {selectedField ? (
-                        <span className="text-purple-400">Now click a FHIR field on the right to create a mapping</span>
+                        <span className="text-white">Now click a FHIR field on the right to create a mapping</span>
                       ) : Object.keys(mappings).length === 0 ? (
                         "Click a field on the left to start mapping, or use Auto-Map"
                       ) : (
@@ -430,7 +418,7 @@ export default function StartupView() {
 
               <div className="flex justify-end mt-6">
                 <Button 
-                  className="h-12 px-8 bg-purple-500 hover:bg-purple-600"
+                  className="h-12 px-8 bg-white text-foreground hover:bg-white/90"
                   onClick={() => setStep("test")}
                   disabled={Object.keys(mappings).length < 3}
                 >
@@ -452,21 +440,21 @@ export default function StartupView() {
             >
               <div className="text-center mb-8">
                 <h2 className="text-3xl font-semibold mb-2">Test Your Integration</h2>
-                <p className="text-white/60">We'll send a test request with sample FHIR data</p>
+                <p className="text-background/60">We'll send a test request with sample FHIR data</p>
               </div>
 
               <Card className="bg-white/5 border-white/10">
                 <CardContent className="p-8">
                   {testResult === "idle" && (
                     <div className="text-center">
-                      <div className="w-20 h-20 rounded-full bg-purple-500/20 flex items-center justify-center mx-auto mb-6">
-                        <Play className="w-10 h-10 text-purple-400" />
+                      <div className="w-20 h-20 rounded-full bg-white/10 flex items-center justify-center mx-auto mb-6">
+                        <Play className="w-10 h-10 text-background/70" />
                       </div>
-                      <p className="text-white/60 mb-6">
+                      <p className="text-background/60 mb-6">
                         Click below to test your AI model with sample patient data from a FHIR server.
                       </p>
                       <Button 
-                        className="h-12 px-8 bg-purple-500 hover:bg-purple-600"
+                        className="h-12 px-8 bg-white text-foreground hover:bg-white/90"
                         onClick={handleTest}
                       >
                         <Zap className="w-5 h-5 mr-2" />
@@ -477,9 +465,9 @@ export default function StartupView() {
 
                   {testResult === "testing" && (
                     <div className="text-center">
-                      <Loader2 className="w-16 h-16 text-purple-400 animate-spin mx-auto mb-6" />
+                      <Loader2 className="w-16 h-16 text-background/70 animate-spin mx-auto mb-6" />
                       <h3 className="text-xl font-semibold mb-2">Testing Integration...</h3>
-                      <p className="text-white/60">Sending request to your API</p>
+                      <p className="text-background/60">Sending request to your API</p>
                     </div>
                   )}
 
@@ -497,7 +485,7 @@ export default function StartupView() {
                       </div>
 
                       <div className="bg-black/30 rounded-lg p-4 font-mono text-sm">
-                        <p className="text-white/50 mb-2">// Response from your API</p>
+                        <p className="text-background/50 mb-2">// Response from your API</p>
                         <pre className="text-accent">
 {`{
   "prediction": "high_risk",
@@ -509,7 +497,7 @@ export default function StartupView() {
                       </div>
 
                       <Button 
-                        className="w-full h-12 bg-accent hover:bg-accent/90"
+                        className="w-full h-12 bg-accent hover:bg-accent/90 text-white"
                         onClick={() => setStep("complete")}
                       >
                         Continue to Go Live
@@ -540,7 +528,7 @@ export default function StartupView() {
               </motion.div>
 
               <h2 className="text-4xl font-semibold mb-4">You're Live! 🎉</h2>
-              <p className="text-xl text-white/60 mb-8">
+              <p className="text-xl text-background/60 mb-8">
                 Your AI model is now available to hospitals in the HealthBridge marketplace.
               </p>
 
@@ -549,20 +537,20 @@ export default function StartupView() {
                   <div className="grid grid-cols-3 gap-6 text-center">
                     <div>
                       <p className="text-3xl font-bold text-accent">0</p>
-                      <p className="text-sm text-white/50">Hospitals Connected</p>
+                      <p className="text-sm text-background/50">Hospitals Connected</p>
                     </div>
                     <div>
-                      <p className="text-3xl font-bold text-white">0</p>
-                      <p className="text-sm text-white/50">API Calls Today</p>
+                      <p className="text-3xl font-bold text-background">0</p>
+                      <p className="text-sm text-background/50">API Calls Today</p>
                     </div>
                     <div>
-                      <p className="text-3xl font-bold text-white">—</p>
-                      <p className="text-sm text-white/50">Avg Response Time</p>
+                      <p className="text-3xl font-bold text-background">—</p>
+                      <p className="text-sm text-background/50">Avg Response Time</p>
                     </div>
                   </div>
 
                   <div className="mt-8 pt-6 border-t border-white/10">
-                    <p className="text-sm text-white/60 mb-4">What happens next:</p>
+                    <p className="text-sm text-background/60 mb-4">What happens next:</p>
                     <div className="text-left space-y-3">
                       {[
                         "Your app will appear in the HealthBridge Marketplace",
@@ -580,8 +568,7 @@ export default function StartupView() {
               </Card>
 
               <Button 
-                className="mt-6"
-                variant="outline"
+                className="mt-6 bg-transparent border border-white/20 text-background hover:bg-white/10"
                 asChild
               >
                 <Link href="/">
