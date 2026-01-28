@@ -216,7 +216,7 @@ export default function LandingPage() {
               <div className="w-9 h-9 rounded-xl bg-foreground flex items-center justify-center">
                 <span className="text-background font-bold text-lg">S</span>
               </div>
-              <span className="font-semibold text-xl tracking-tight">Straits</span>
+              <span className="font-semibold text-xl tracking-tight">Scrub</span>
             </Link>
             
             <nav className="hidden md:flex items-center gap-8">
@@ -276,7 +276,7 @@ export default function LandingPage() {
               variants={fadeInUp}
               className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed mb-10"
             >
-              Straits connects hospitals to AI instantly. Install clinical AI modules 
+              Scrub connects hospitals to AI instantly. Install clinical AI modules 
               in one click, right inside your existing EMR.
             </motion.p>
 
@@ -367,14 +367,14 @@ export default function LandingPage() {
                   </div>
                 </div>
 
-                {/* AI Sidebar - Straits Widget */}
+                {/* AI Sidebar - Scrub Widget */}
                 <div className="w-80 border-l bg-foreground text-background p-5">
                   <div className="flex items-center gap-3 mb-6">
                     <div className="w-10 h-10 rounded-xl bg-accent flex items-center justify-center">
                       <Brain className="w-5 h-5 text-white" />
                     </div>
                     <div>
-                      <h3 className="font-semibold">Straits AI</h3>
+                      <h3 className="font-semibold">Scrub AI</h3>
                       <p className="text-xs text-background/60">Real-time Clinical Intelligence</p>
                     </div>
                   </div>
@@ -412,7 +412,7 @@ export default function LandingPage() {
                   </div>
 
                   <p className="text-xs text-background/40 mt-6 text-center">
-                    Powered by BioSense AI via Straits
+                    Powered by BioSense AI via Scrub
                   </p>
                 </div>
               </div>
@@ -438,7 +438,7 @@ export default function LandingPage() {
               transition={{ delay: 1 }}
             >
               <div className="bg-accent text-white px-4 py-2 rounded-lg text-sm shadow-lg">
-                <p className="font-medium">Straits AI Widget</p>
+                <p className="font-medium">Scrub AI Widget</p>
                 <p className="text-xs text-white/80">Installs in one click</p>
               </div>
             </motion.div>
@@ -475,7 +475,7 @@ export default function LandingPage() {
               Everything you need to deploy AI in healthcare
             </h2>
             <p className="text-xl text-muted-foreground">
-              From hospital admins to AI startups to developers — Straits makes healthcare AI accessible to everyone.
+              From hospital admins to AI startups to developers — Scrub makes healthcare AI accessible to everyone.
             </p>
           </motion.div>
 
@@ -648,7 +648,7 @@ export default function LandingPage() {
               Ready to bring AI to your hospital?
             </h2>
             <p className="text-lg text-background/70 mb-8 max-w-2xl mx-auto">
-              See how Straits can transform your clinical workflows with AI that installs in minutes, not months.
+              See how Scrub can transform your clinical workflows with AI that installs in minutes, not months.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Button size="lg" asChild className="bg-accent hover:bg-accent/90 text-white px-8">
@@ -673,7 +673,7 @@ export default function LandingPage() {
               <div className="w-9 h-9 rounded-xl bg-foreground flex items-center justify-center">
                 <span className="text-background font-bold text-lg">S</span>
               </div>
-              <span className="font-semibold text-lg">Straits</span>
+              <span className="font-semibold text-lg">Scrub</span>
             </div>
             <div className="flex items-center gap-8 text-sm text-muted-foreground">
               <a href="#" className="hover:text-foreground transition-colors">Privacy</a>
@@ -682,7 +682,7 @@ export default function LandingPage() {
               <a href="#" className="hover:text-foreground transition-colors">Contact</a>
             </div>
             <p className="text-sm text-muted-foreground">
-              © 2026 Straits. All rights reserved.
+              © 2026 Scrub. All rights reserved.
             </p>
           </div>
         </div>

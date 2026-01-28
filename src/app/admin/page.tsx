@@ -34,7 +34,7 @@ type ModuleWithProfile = Module & {
   };
 };
 
-export default function StraitsAdminDashboard() {
+export default function ScrubAdminDashboard() {
   const [modules, setModules] = useState<ModuleWithProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
@@ -147,7 +147,7 @@ export default function StraitsAdminDashboard() {
                   <Shield className="w-5 h-5 text-background" />
                 </div>
                 <div>
-                  <h1 className="font-semibold text-lg">Straits Admin</h1>
+                  <h1 className="font-semibold text-lg">Scrub Admin</h1>
                   <p className="text-xs text-muted-foreground">Module Approval Dashboard</p>
                 </div>
               </div>

@@ -28,7 +28,7 @@ const portals = [
     id: "startup",
     title: "AI Startup",
     subtitle: "Submit Modules",
-    description: "Submit your AI models to the Straits marketplace and reach healthcare organizations.",
+    description: "Submit your AI models to the Scrub marketplace and reach healthcare organizations.",
     icon: Rocket,
     href: "/portal/startup",
     roleKey: "is_startup",
@@ -111,7 +111,7 @@ export default function PortalPage() {
             <span className="text-background font-bold text-lg">S</span>
           </div>
           <div>
-            <span className="font-semibold text-xl tracking-tight block">Straits</span>
+            <span className="font-semibold text-xl tracking-tight block">Scrub</span>
           </div>
         </Link>
         <div className="flex items-center gap-4">
@@ -213,7 +213,7 @@ export default function PortalPage() {
       {/* Footer */}
       <footer className="relative z-10 border-t py-8 px-8">
         <div className="max-w-6xl mx-auto flex items-center justify-center">
-          <span className="text-sm text-muted-foreground">Straits Portal • Secure Access</span>
+          <span className="text-sm text-muted-foreground">Scrub Portal • Secure Access</span>
         </div>
       </footer>
     </div>

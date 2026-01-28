@@ -28,8 +28,8 @@ export type SignupData = {
   };
 };
 
-const STORAGE_KEY = "straits_signup_name";
-const SIGNUP_MODE_KEY = "straits_signup_mode";
+const STORAGE_KEY = "scrub_signup_name";
+const SIGNUP_MODE_KEY = "scrub_signup_mode";
 
 export default function AuthPage() {
   const [step, setStep] = useState<AuthStep>("loading");
@@ -211,7 +211,7 @@ export default function AuthPage() {
             <span className="text-background font-bold text-lg">S</span>
           </div>
           <div>
-            <span className="font-semibold text-xl tracking-tight block">Straits</span>
+            <span className="font-semibold text-xl tracking-tight block">Scrub</span>
           </div>
         </Link>
         <Link 

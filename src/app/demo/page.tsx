@@ -25,7 +25,7 @@ export default function DemoPage() {
             <span className="text-background font-bold text-lg">S</span>
           </div>
           <div>
-            <span className="font-semibold text-xl tracking-tight block">Straits</span>
+            <span className="font-semibold text-xl tracking-tight block">Scrub</span>
           </div>
         </Link>
         <Button variant="ghost" asChild>
@@ -52,7 +52,7 @@ export default function DemoPage() {
           variants={fadeInUp}
           className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight max-w-4xl mx-auto leading-[1.1] mb-6"
         >
-          See Straits in{" "}
+          See Scrub in{" "}
           <span className="text-accent">Action</span>
         </motion.h1>
         
@@ -138,7 +138,7 @@ export default function DemoPage() {
       {/* Footer */}
       <footer className="relative z-10 border-t py-8 px-8">
         <div className="max-w-6xl mx-auto flex items-center justify-center">
-          <span className="text-sm text-muted-foreground">Straits Demo • AI Infrastructure for Healthcare</span>
+          <span className="text-sm text-muted-foreground">Scrub Demo • AI Infrastructure for Healthcare</span>
         </div>
       </footer>
     </div>

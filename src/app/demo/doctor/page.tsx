@@ -311,7 +311,7 @@ export default function DoctorView() {
         </div>
       </div>
 
-      {/* AI Sidebar - The Straits Widget */}
+      {/* AI Sidebar - The Scrub Widget */}
       <AnimatePresence>
         {showAIPanel && (
           <motion.aside
@@ -329,7 +329,7 @@ export default function DoctorView() {
                     <Brain className="w-5 h-5 text-white" />
                   </div>
                   <div>
-                    <h2 className="font-semibold">Straits AI</h2>
+                    <h2 className="font-semibold">Scrub AI</h2>
                     <p className="text-xs text-background/70">Real-time Clinical Intelligence</p>
                   </div>
                 </div>
@@ -432,7 +432,7 @@ export default function DoctorView() {
             {/* AI Panel Footer */}
             <div className="p-4 border-t bg-muted/30">
               <p className="text-xs text-muted-foreground text-center">
-                Powered by Straits • Last updated 2 min ago
+                Powered by Scrub • Last updated 2 min ago
               </p>
             </div>
           </motion.aside>

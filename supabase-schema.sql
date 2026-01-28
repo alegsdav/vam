@@ -1,5 +1,5 @@
 -- =====================================================
--- STRAITS DATABASE SCHEMA
+-- SCRUB DATABASE SCHEMA
 -- Run this in your Supabase SQL Editor
 -- =====================================================
 

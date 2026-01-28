@@ -93,7 +93,7 @@ export function EntryStep({ onSignUp, onMagicLinkSent }: Props) {
 
           <div className="mt-6 pt-6 border-t">
             <p className="text-sm text-muted-foreground">
-              New to Straits?{" "}
+              New to Scrub?{" "}
               <button 
                 onClick={onSignUp}
                 className="text-accent font-medium hover:underline"

@@ -182,7 +182,7 @@ export default function ITView() {
               <span className="font-bold text-white">S</span>
             </div>
             <div>
-              <span className="font-semibold text-sm block">Straits</span>
+              <span className="font-semibold text-sm block">Scrub</span>
               <span className="text-xs text-background/60">IT Console</span>
             </div>
           </Link>
@@ -580,7 +580,7 @@ export default function ITView() {
                   
                   <h3 className="text-xl font-semibold mb-2">
                     {installState === "connecting" && "Connecting to Epic..."}
-                    {installState === "authenticating" && "Authenticating via Straits..."}
+                    {installState === "authenticating" && "Authenticating via Scrub..."}
                     {installState === "installing" && "Installing module..."}
                     {installState === "complete" && "Installation Complete!"}
                   </h3>

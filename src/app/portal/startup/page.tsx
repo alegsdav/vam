@@ -132,7 +132,7 @@ export default function StartupPortal() {
               </div>
             </div>
             <Badge className="bg-white/10 text-background/70 border-0">
-              Straits Marketplace
+              Scrub Marketplace
             </Badge>
           </div>
         </div>

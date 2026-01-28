@@ -78,7 +78,7 @@ export function UsernameStep({ data, updateData, onNext }: Props) {
       
       <h1 className="text-3xl font-bold mb-2">Choose a username</h1>
       <p className="text-muted-foreground mb-8">
-        This will be your unique identifier on Straits.
+        This will be your unique identifier on Scrub.
       </p>
 
       <Card className="border-0 shadow-lg">
