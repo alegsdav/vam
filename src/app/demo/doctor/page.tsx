@@ -97,7 +97,7 @@ export default function DoctorView() {
         <header className="bg-foreground text-background">
           <div className="flex items-center justify-between px-4 py-2 border-b border-white/10">
             <div className="flex items-center gap-4">
-              <Link href="/" className="flex items-center gap-2 text-background/70 hover:text-background transition-colors">
+              <Link href="/demo" className="flex items-center gap-2 text-background/70 hover:text-background transition-colors">
                 <ArrowLeft className="w-4 h-4" />
                 <span className="text-sm">Exit Demo</span>
               </Link>

@@ -133,9 +133,9 @@ export default function DeveloperView() {
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-6">
-              <Link href="/" className="flex items-center gap-2 text-background/50 hover:text-background transition-colors">
+              <Link href="/portal" className="flex items-center gap-2 text-background/50 hover:text-background transition-colors">
                 <ArrowLeft className="w-4 h-4" />
-                <span className="text-sm">Exit Demo</span>
+                <span className="text-sm">Back to Portal</span>
               </Link>
               <div className="w-px h-6 bg-white/20" />
               <div className="flex items-center gap-3">
@@ -429,9 +429,9 @@ export default function DeveloperView() {
                 <ExternalLink className="w-4 h-4 ml-2" />
               </Button>
               <Button variant="outline" className="border-white/20 text-background hover:bg-white/10 bg-transparent" asChild>
-                <Link href="/">
+                <Link href="/portal">
                   <ArrowLeft className="w-4 h-4 mr-2" />
-                  Back to Demo
+                  Back to Portal
                 </Link>
               </Button>
             </div>

@@ -2,48 +2,10 @@
 
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { Stethoscope, Building2, Rocket, Code2, ArrowRight, ArrowLeft } from "lucide-react";
+import { Stethoscope, ArrowRight, ArrowLeft, PlayCircle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-
-const roles = [
-  {
-    id: "doctor",
-    title: "Doctor",
-    subtitle: "The EHR View",
-    description: "See how AI appears inside your existing clinical workflow — no learning curve required.",
-    icon: Stethoscope,
-    href: "/doctor",
-    preview: "Epic-style dashboard with AI widget"
-  },
-  {
-    id: "admin",
-    title: "Admin",
-    subtitle: "The Control Center",
-    description: "Monitor AI usage, manage costs, and install new capabilities from the marketplace.",
-    icon: Building2,
-    href: "/admin",
-    preview: "Dashboard + Marketplace access"
-  },
-  {
-    id: "startup",
-    title: "AI Startup",
-    subtitle: "The Provider Portal",
-    description: "Upload your AI model and connect to hospital data in minutes — no integration work.",
-    icon: Rocket,
-    href: "/startup",
-    preview: "No-code data mapping interface"
-  },
-  {
-    id: "developer",
-    title: "Developer",
-    subtitle: "The SDK View",
-    description: "Embed healthcare AI into any software with a simple script tag.",
-    icon: Code2,
-    href: "/developer",
-    preview: "Copy-paste integration code"
-  }
-];
+import { Badge } from "@/components/ui/badge";
 
 const fadeInUp = {
   initial: { opacity: 0, y: 30 },
@@ -76,110 +38,100 @@ export default function DemoPage() {
 
       {/* Hero */}
       <motion.section 
-        className="relative z-10 pt-12 pb-16 px-8 text-center"
+        className="relative z-10 pt-16 pb-12 px-8 text-center"
         initial="initial"
         animate="animate"
         variants={{ animate: { transition: { staggerChildren: 0.1 } } }}
       >
+        <motion.div variants={fadeInUp} className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border bg-background text-sm font-medium mb-6">
+          <PlayCircle className="w-4 h-4 text-accent" />
+          <span>Interactive Demo</span>
+        </motion.div>
+
         <motion.h1 
           variants={fadeInUp}
           className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight max-w-4xl mx-auto leading-[1.1] mb-6"
         >
-          Choose Your{" "}
-          <span className="text-accent">Perspective</span>
+          See Straits in{" "}
+          <span className="text-accent">Action</span>
         </motion.h1>
         
         <motion.p 
           variants={fadeInUp}
           className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed"
         >
-          Experience Straits from different viewpoints — see how each stakeholder 
-          interacts with the platform.
+          Experience how AI seamlessly integrates into the clinical workflow. 
+          See it from the doctor's perspective.
         </motion.p>
       </motion.section>
 
-      {/* Role Selection Cards */}
+      {/* Doctor Demo Card */}
       <motion.section 
-        className="relative z-10 px-8 pb-16 max-w-6xl mx-auto"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.3 }}
+        className="relative z-10 px-8 pb-16 max-w-2xl mx-auto"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4 }}
       >
-        <div className="grid md:grid-cols-2 gap-6">
-          {roles.map((role, i) => (
-            <motion.div
-              key={role.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.4 + i * 0.1 }}
-            >
-              <Link href={role.href}>
-                <Card className="group h-full border hover:border-foreground/20 hover:shadow-lg transition-all cursor-pointer overflow-hidden">
-                  <CardContent className="p-0">
-                    <div className="p-8">
-                      <div className="flex items-start justify-between mb-6">
-                        <div className="w-14 h-14 rounded-2xl bg-foreground flex items-center justify-center">
-                          <role.icon className="w-7 h-7 text-background" />
-                        </div>
-                        <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-foreground group-hover:translate-x-1 transition-all" />
-                      </div>
-                      <div className="space-y-2 mb-4">
-                        <h2 className="text-2xl font-semibold">{role.title}</h2>
-                        <p className="text-sm text-accent font-medium">{role.subtitle}</p>
-                      </div>
-                      <p className="text-muted-foreground leading-relaxed">
-                        {role.description}
-                      </p>
-                    </div>
-                    <div className="px-8 py-4 bg-muted/50 border-t">
-                      <p className="text-xs text-muted-foreground">
-                        <span className="font-medium text-foreground">Preview:</span> {role.preview}
-                      </p>
-                    </div>
-                  </CardContent>
-                </Card>
-              </Link>
-            </motion.div>
-          ))}
-        </div>
-      </motion.section>
+        <Link href="/demo/doctor">
+          <Card className="group border-2 hover:border-accent hover:shadow-xl transition-all cursor-pointer overflow-hidden">
+            <CardContent className="p-0">
+              {/* Card Header with Icon */}
+              <div className="p-8 pb-6">
+                <div className="flex items-start justify-between mb-6">
+                  <div className="w-16 h-16 rounded-2xl bg-foreground flex items-center justify-center">
+                    <Stethoscope className="w-8 h-8 text-background" />
+                  </div>
+                  <Badge className="bg-accent/10 text-accent border-0">
+                    Live Demo
+                  </Badge>
+                </div>
+                <h2 className="text-3xl font-bold mb-2">Doctor View</h2>
+                <p className="text-lg text-accent font-medium mb-4">The EHR Experience</p>
+                <p className="text-muted-foreground leading-relaxed text-lg">
+                  See how AI predictions appear directly inside Epic EHR. 
+                  No new software to learn — just actionable insights where you already work.
+                </p>
+              </div>
 
-      {/* Pitch Flow Hint */}
-      <motion.section 
-        className="relative z-10 px-8 pb-24"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.7 }}
-      >
-        <div className="max-w-4xl mx-auto">
-          <Card className="bg-foreground text-background border-0">
-            <CardContent className="p-8">
-              <h3 className="text-lg font-semibold mb-4">Recommended Demo Flow</h3>
-              <div className="grid md:grid-cols-3 gap-6 text-sm">
-                <div className="flex gap-3">
-                  <div className="w-6 h-6 rounded-full bg-accent flex items-center justify-center flex-shrink-0 text-xs font-bold text-white">1</div>
+              {/* Preview section */}
+              <div className="bg-muted/50 border-t px-8 py-6">
+                <div className="flex items-center justify-between">
                   <div>
-                    <p className="font-medium mb-1">Start with Admin</p>
-                    <p className="text-background/70">"I browse the marketplace, find Sepsis AI, click Install — no IT ticket."</p>
+                    <p className="text-sm font-medium text-foreground mb-1">What you'll see:</p>
+                    <ul className="text-sm text-muted-foreground space-y-1">
+                      <li>• Epic-style patient dashboard</li>
+                      <li>• Real-time AI predictions sidebar</li>
+                      <li>• Sepsis risk, length of stay, readmission alerts</li>
+                    </ul>
                   </div>
-                </div>
-                <div className="flex gap-3">
-                  <div className="w-6 h-6 rounded-full bg-accent flex items-center justify-center flex-shrink-0 text-xs font-bold text-white">2</div>
-                  <div>
-                    <p className="font-medium mb-1">Show Doctor View</p>
-                    <p className="text-background/70">"Now the AI widget appears inside Epic, reading real-time data."</p>
-                  </div>
-                </div>
-                <div className="flex gap-3">
-                  <div className="w-6 h-6 rounded-full bg-accent flex items-center justify-center flex-shrink-0 text-xs font-bold text-white">3</div>
-                  <div>
-                    <p className="font-medium mb-1">Explain Startup Side</p>
-                    <p className="text-background/70">"The startup logged in, pasted their API, mapped data in 5 min."</p>
+                  <div className="flex items-center gap-2 text-accent font-semibold group-hover:translate-x-1 transition-transform">
+                    <span>Launch Demo</span>
+                    <ArrowRight className="w-5 h-5" />
                   </div>
                 </div>
               </div>
             </CardContent>
           </Card>
+        </Link>
+      </motion.section>
+
+      {/* Additional Info */}
+      <motion.section 
+        className="relative z-10 px-8 pb-24"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.6 }}
+      >
+        <div className="max-w-2xl mx-auto text-center">
+          <p className="text-muted-foreground mb-6">
+            Want to see the admin dashboard, startup portal, or developer SDK?
+          </p>
+          <Button variant="outline" asChild>
+            <Link href="/portal" className="flex items-center gap-2">
+              Go to Portal
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+          </Button>
         </div>
       </motion.section>
 

@@ -226,8 +226,8 @@ export default function LandingPage() {
             </nav>
 
             <div className="flex items-center gap-3">
-              <Button variant="ghost" size="sm" className="hidden sm:flex">
-                Log in
+              <Button variant="ghost" size="sm" className="hidden sm:flex" asChild>
+                <Link href="/portal">Portal</Link>
               </Button>
               <Button asChild className="bg-accent hover:bg-accent/90 text-white">
                 <Link href="/demo" className="flex items-center gap-2">
