@@ -2,503 +2,499 @@
 
 export const dynamic = 'force-dynamic';
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
-import Link from "next/link";
-import { useRouter, usePathname } from "next/navigation";
 import { 
-  Building2, 
-  Rocket, 
-  Code2, 
-  Home,
-  LogOut, 
-  Settings,
-  HelpCircle,
-  ChevronRight,
-  TrendingUp,
-  TrendingDown,
+  ArrowRight,
+  Activity,
   Clock,
+  AlertTriangle,
+  TrendingUp,
   CheckCircle2,
-  Zap,
-  BarChart3,
-  Calendar,
-  MessageSquare,
-  FileText,
-  Crown
+  XCircle,
+  Gauge,
+  Boxes,
+  Building2,
+  Code2,
+  FileJson,
+  Rocket,
+  Info
 } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { createClient } from "@/lib/supabase/client";
-import type { Profile } from "@/lib/supabase/types";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { usePersona } from "./persona-context";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
-const navigation = [
-  {
-    id: "home",
-    title: "Home",
-    icon: Home,
-    href: "/portal",
-    active: true
-  },
-  {
-    id: "it",
-    title: "IT Admin",
-    subtitle: "Manage AI Modules",
-    icon: Building2,
-    href: "/portal/it",
-    roleKey: "is_it",
-  },
-  {
-    id: "startup",
-    title: "AI Startup",
-    subtitle: "Submit Modules",
-    icon: Rocket,
-    href: "/portal/startup",
-    roleKey: "is_startup",
-  },
-  {
-    id: "developer",
-    title: "Developer",
-    subtitle: "SDK & Docs",
-    icon: Code2,
-    href: "/portal/developer",
-    roleKey: "is_developer",
-  }
+// Mock data - same underlying numbers, different labels
+const mockData = {
+  volume: 5247,
+  speed: 1.2, // seconds
+  speedMs: 142, // milliseconds for technical
+  failures: 23,
+  failureRate: 0.4, // percentage
+  value: 847, // hours saved / dollars
+  scrubScore: 82,
+};
+
+// Pipeline status
+const pipelineStatus = {
+  source: { status: "healthy", label: "EHR Systems" },
+  processing: { status: "healthy", label: "Scrub AI" },
+  destination: { status: "healthy", label: "Applications" },
+};
+
+// Mock data for tabs
+const myApps = [
+  { name: "Sepsis AI Pro", status: "active", calls: "2.1K", revenue: "$4,230" },
+  { name: "Cardiac Risk Model", status: "active", calls: "1.4K", revenue: "$2,180" },
+  { name: "LOS Predictor", status: "pending", calls: "—", revenue: "—" },
 ];
 
-// Mock data for dashboard
-const stats = [
-  { label: "API Calls", value: "2,847", change: "+12%", positive: true, icon: Zap },
-  { label: "Active Modules", value: "6", change: "+2", positive: true, icon: CheckCircle2 },
-  { label: "Avg Response", value: "142ms", change: "-18ms", positive: true, icon: Clock },
+const myIntegrations = [
+  { name: "Epic - Cardiology Unit", status: "connected", patients: "1,247", lastSync: "2 min ago" },
+  { name: "Epic - Emergency Dept", status: "connected", patients: "892", lastSync: "5 min ago" },
+  { name: "Cerner - Main Campus", status: "syncing", patients: "3,108", lastSync: "syncing..." },
 ];
 
-const recentActivity = [
-  { 
-    user: "System", 
-    action: "New module available", 
-    target: "Sepsis AI Pro v2.1", 
-    time: "2 hours ago",
-    type: "update"
-  },
-  { 
-    user: "Dr. Chen", 
-    action: "Installed module", 
-    target: "ReadmitRisk", 
-    time: "5 hours ago",
-    type: "install"
-  },
-  { 
-    user: "IT Admin", 
-    action: "Updated settings", 
-    target: "API Configuration", 
-    time: "1 day ago",
-    type: "settings"
-  },
-  { 
-    user: "System", 
-    action: "Monthly report ready", 
-    target: "January 2026", 
-    time: "2 days ago",
-    type: "report"
-  },
+const recentLogs = [
+  { timestamp: "2026-01-27T14:32:01Z", level: "info", message: "POST /v1/predict - 200 OK (142ms)", endpoint: "/v1/predict" },
+  { timestamp: "2026-01-27T14:31:58Z", level: "info", message: "POST /v1/predict - 200 OK (138ms)", endpoint: "/v1/predict" },
+  { timestamp: "2026-01-27T14:31:45Z", level: "warn", message: "POST /v1/predict - 429 Rate Limited", endpoint: "/v1/predict" },
+  { timestamp: "2026-01-27T14:31:22Z", level: "info", message: "GET /v1/models - 200 OK (45ms)", endpoint: "/v1/models" },
+  { timestamp: "2026-01-27T14:30:59Z", level: "error", message: "POST /v1/predict - 500 Internal Error", endpoint: "/v1/predict" },
 ];
 
-const quickActions = [
-  { title: "Browse Marketplace", description: "Find new AI modules", href: "/portal/it", icon: Building2 },
-  { title: "Submit Module", description: "List your AI on Scrub", href: "/portal/startup", icon: Rocket },
-  { title: "View Documentation", description: "SDK & API guides", href: "/portal/developer", icon: Code2 },
-];
+export default function PortalHomePage() {
+  const { persona, labels } = usePersona();
+  const [activeTab, setActiveTab] = useState("apps");
 
-export default function PortalPage() {
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [loading, setLoading] = useState(true);
-  const router = useRouter();
-  const pathname = usePathname();
-  const supabase = createClient();
-
-  useEffect(() => {
-    const getProfile = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        router.push("/portal/auth");
-        return;
-      }
-
-      const { data } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", user.id)
-        .single();
-
-      if (data) {
-        setProfile(data as Profile);
-      }
-      setLoading(false);
-    };
-
-    getProfile();
-  }, [router, supabase]);
-
-  const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    router.push("/");
+  // Format values based on persona
+  const getVolumeDisplay = () => {
+    return mockData.volume.toLocaleString();
   };
 
-  // Get current date
-  const today = new Date();
-  const formattedDate = today.toLocaleDateString('en-US', { 
-    day: 'numeric', 
-    month: 'long', 
-    year: 'numeric' 
-  });
+  const getSpeedDisplay = () => {
+    if (persona === "clinical") return `${mockData.speed}s`;
+    return `${mockData.speedMs}ms`;
+  };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-foreground border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
-  }
+  const getFailuresDisplay = () => {
+    if (persona === "business") return `${mockData.failureRate}%`;
+    return mockData.failures.toString();
+  };
+
+  const getValueDisplay = () => {
+    if (persona === "clinical") return `${mockData.value}`;
+    return `$${mockData.value.toLocaleString()}`;
+  };
 
   return (
-    <div className="min-h-screen bg-muted/30 flex">
-      {/* Left Sidebar */}
-      <aside className="w-64 bg-background border-r flex flex-col min-h-screen sticky top-0">
-        {/* Logo */}
-        <div className="p-6 border-b">
-          <Link href="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-            <div className="w-10 h-10 rounded-xl bg-foreground flex items-center justify-center">
-              <span className="text-background font-bold text-lg">S</span>
-            </div>
-            <span className="font-semibold text-xl tracking-tight">Scrub</span>
-          </Link>
-        </div>
-
-        {/* Navigation */}
-        <nav className="flex-1 p-4">
-          <div className="space-y-1">
-            {navigation.map((item) => {
-              const isActive = item.href === pathname;
-              const hasAccess = !item.roleKey || (profile && profile[item.roleKey as keyof Profile]);
-              
-              return (
-                <Link
-                  key={item.id}
-                  href={item.href}
-                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all group ${
-                    isActive 
-                      ? "bg-foreground text-background" 
-                      : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                  }`}
-                >
-                  <item.icon className={`w-5 h-5 ${isActive ? '' : 'group-hover:text-foreground'}`} />
-                  <div className="flex-1">
-                    <span className="font-medium">{item.title}</span>
-                    {item.subtitle && (
-                      <p className={`text-xs ${isActive ? 'text-background/70' : 'text-muted-foreground'}`}>
-                        {item.subtitle}
-                      </p>
-                    )}
-                  </div>
-                  {!hasAccess && item.roleKey && (
-                    <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
-                      Pro
-                    </Badge>
-                  )}
-                </Link>
-              );
-            })}
-          </div>
-
-          {/* Settings link */}
-          <div className="mt-6 pt-6 border-t">
-            <Link
-              href="/admin"
-              className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-muted-foreground hover:bg-muted hover:text-foreground transition-all"
-            >
-              <Settings className="w-5 h-5" />
-              <span className="font-medium">Admin Panel</span>
-            </Link>
-          </div>
-        </nav>
-
-        {/* Upgrade Card */}
-        <div className="p-4">
-          <div className="bg-gradient-to-br from-accent/10 to-accent/5 border border-accent/20 rounded-2xl p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <Crown className="w-5 h-5 text-accent" />
-              <span className="font-semibold text-sm">Upgrade to Pro</span>
-            </div>
-            <p className="text-xs text-muted-foreground mb-3">
-              Get access to all features and unlock premium modules.
-            </p>
-            <Button size="sm" className="w-full bg-accent hover:bg-accent/90 text-white">
-              Upgrade
-            </Button>
-          </div>
-        </div>
-
-        {/* Bottom Links */}
-        <div className="p-4 border-t space-y-1">
-          <button className="flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-muted-foreground hover:bg-muted hover:text-foreground transition-all w-full">
-            <HelpCircle className="w-5 h-5" />
-            <span>Help & Support</span>
-          </button>
-          <button 
-            onClick={handleSignOut}
-            className="flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-muted-foreground hover:bg-muted hover:text-foreground transition-all w-full"
-          >
-            <LogOut className="w-5 h-5" />
-            <span>Log out</span>
-          </button>
-        </div>
-      </aside>
-
-      {/* Main Content */}
-      <main className="flex-1 p-8 overflow-auto">
+    <TooltipProvider>
+      <div className="space-y-6">
         {/* Header */}
-        <motion.div 
-          className="mb-8"
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          <div className="flex items-start justify-between">
-            <div>
-              <h1 className="text-3xl font-bold mb-1">
-                Hello, {profile?.name || profile?.username || "there"}
-              </h1>
-              <p className="text-muted-foreground">
-                Track your AI usage and manage your healthcare integrations.
-              </p>
-            </div>
-            <div className="flex items-center gap-2 text-sm text-muted-foreground bg-background rounded-lg px-3 py-2 border">
-              <Calendar className="w-4 h-4" />
-              <span>{formattedDate}</span>
-            </div>
-          </div>
+          <h1 className="text-3xl font-bold mb-1">Scrub Dashboard</h1>
+          <p className="text-muted-foreground">
+            Unified view of your healthcare AI pipeline
+          </p>
         </motion.div>
 
-        {/* Stats Cards */}
-        <motion.div 
-          className="grid grid-cols-3 gap-4 mb-8"
+        {/* Top Row: Pipeline Health - The Heartbeat */}
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
         >
-          {stats.map((stat, i) => (
-            <Card key={stat.label} className="border-0 shadow-sm">
-              <CardContent className="p-6">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-2xl bg-muted flex items-center justify-center">
-                    <stat.icon className="w-6 h-6 text-foreground" />
+          <Card className="border-0 shadow-sm">
+            <CardHeader className="pb-2">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-base font-semibold">Pipeline Health</CardTitle>
+                <Badge variant="secondary" className="bg-accent/10 text-accent">
+                  <CheckCircle2 className="w-3 h-3 mr-1" />
+                  All Systems Operational
+                </Badge>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between py-4">
+                {/* Source */}
+                <div className="flex-1 text-center">
+                  <div className={`w-16 h-16 rounded-2xl mx-auto mb-2 flex items-center justify-center ${
+                    pipelineStatus.source.status === "healthy" ? "bg-accent/10" : "bg-red-100"
+                  }`}>
+                    <Building2 className={`w-8 h-8 ${
+                      pipelineStatus.source.status === "healthy" ? "text-accent" : "text-red-500"
+                    }`} />
                   </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">{stat.label}</p>
-                    <div className="flex items-center gap-2">
-                      <span className="text-2xl font-bold">{stat.value}</span>
-                      <span className={`text-xs font-medium flex items-center gap-0.5 ${
-                        stat.positive ? 'text-accent' : 'text-red-500'
-                      }`}>
-                        {stat.positive ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
-                        {stat.change}
-                      </span>
-                    </div>
-                  </div>
+                  <p className="font-medium text-sm">Source</p>
+                  <p className="text-xs text-muted-foreground">{pipelineStatus.source.label}</p>
                 </div>
-              </CardContent>
-            </Card>
-          ))}
+
+                {/* Arrow */}
+                <div className="flex-1 flex items-center justify-center">
+                  <div className="h-1 flex-1 bg-accent/20 rounded-full relative overflow-hidden max-w-[100px]">
+                    <motion.div 
+                      className="absolute inset-y-0 left-0 bg-accent rounded-full"
+                      initial={{ width: "0%" }}
+                      animate={{ width: "100%" }}
+                      transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+                      style={{ width: "30%" }}
+                    />
+                  </div>
+                  <ArrowRight className="w-5 h-5 text-accent mx-2" />
+                </div>
+
+                {/* Processing */}
+                <div className="flex-1 text-center">
+                  <div className={`w-16 h-16 rounded-2xl mx-auto mb-2 flex items-center justify-center ${
+                    pipelineStatus.processing.status === "healthy" ? "bg-accent/10" : "bg-red-100"
+                  }`}>
+                    <Activity className={`w-8 h-8 ${
+                      pipelineStatus.processing.status === "healthy" ? "text-accent" : "text-red-500"
+                    }`} />
+                  </div>
+                  <p className="font-medium text-sm">Processing</p>
+                  <p className="text-xs text-muted-foreground">{pipelineStatus.processing.label}</p>
+                </div>
+
+                {/* Arrow */}
+                <div className="flex-1 flex items-center justify-center">
+                  <div className="h-1 flex-1 bg-accent/20 rounded-full relative overflow-hidden max-w-[100px]">
+                    <motion.div 
+                      className="absolute inset-y-0 left-0 bg-accent rounded-full"
+                      initial={{ width: "0%" }}
+                      animate={{ width: "100%" }}
+                      transition={{ duration: 1.5, repeat: Infinity, ease: "linear", delay: 0.5 }}
+                      style={{ width: "30%" }}
+                    />
+                  </div>
+                  <ArrowRight className="w-5 h-5 text-accent mx-2" />
+                </div>
+
+                {/* Destination */}
+                <div className="flex-1 text-center">
+                  <div className={`w-16 h-16 rounded-2xl mx-auto mb-2 flex items-center justify-center ${
+                    pipelineStatus.destination.status === "healthy" ? "bg-accent/10" : "bg-red-100"
+                  }`}>
+                    <Boxes className={`w-8 h-8 ${
+                      pipelineStatus.destination.status === "healthy" ? "text-accent" : "text-red-500"
+                    }`} />
+                  </div>
+                  <p className="font-medium text-sm">Destination</p>
+                  <p className="text-xs text-muted-foreground">{pipelineStatus.destination.label}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </motion.div>
 
-        {/* Quick Actions */}
+        {/* Middle Row: Impact Cards - Universal Metrics */}
         <motion.div 
-          className="mb-8"
+          className="grid grid-cols-5 gap-4"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
         >
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold">Quick Actions</h2>
-          </div>
-          <div className="grid grid-cols-3 gap-4">
-            {quickActions.map((action, i) => (
-              <Link key={action.title} href={action.href}>
-                <Card className="border hover:border-foreground/20 hover:shadow-md transition-all cursor-pointer group h-full">
-                  <CardContent className="p-5">
-                    <div className="flex items-start justify-between mb-3">
-                      <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center group-hover:bg-foreground group-hover:text-background transition-colors">
-                        <action.icon className="w-5 h-5" />
-                      </div>
-                      <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-foreground group-hover:translate-x-1 transition-all" />
+          {/* Scrub Score - The Credit Score */}
+          <Card className="border-0 shadow-sm col-span-1">
+            <CardContent className="p-5">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="cursor-help">
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Scrub Score</span>
+                      <Info className="w-3.5 h-3.5 text-muted-foreground" />
                     </div>
-                    <h3 className="font-semibold mb-1">{action.title}</h3>
-                    <p className="text-sm text-muted-foreground">{action.description}</p>
-                  </CardContent>
-                </Card>
-              </Link>
-            ))}
-          </div>
+                    <div className="relative">
+                      <div className="w-20 h-20 mx-auto">
+                        <svg className="w-20 h-20 transform -rotate-90">
+                          <circle
+                            cx="40"
+                            cy="40"
+                            r="36"
+                            stroke="currentColor"
+                            strokeWidth="8"
+                            fill="none"
+                            className="text-muted/30"
+                          />
+                          <circle
+                            cx="40"
+                            cy="40"
+                            r="36"
+                            stroke="currentColor"
+                            strokeWidth="8"
+                            fill="none"
+                            strokeDasharray={`${(mockData.scrubScore / 100) * 226} 226`}
+                            className="text-accent"
+                            strokeLinecap="round"
+                          />
+                        </svg>
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <span className="text-2xl font-bold">{mockData.scrubScore}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <p className="text-xs text-center text-muted-foreground mt-2">Data Quality</p>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" className="max-w-[200px]">
+                  <p className="text-xs">
+                    {persona === "clinical" && "Your data completeness score. Missing patient weights in Cardiology."}
+                    {persona === "business" && "Data quality affects model accuracy and revenue. Score > 80 is good."}
+                    {persona === "technical" && "FHIR compliance score. Consider normalizing units (lbs→kg)."}
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+            </CardContent>
+          </Card>
+
+          {/* Volume / Throughput */}
+          <Card className="border-0 shadow-sm">
+            <CardContent className="p-5">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="cursor-help">
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Throughput</span>
+                      <Info className="w-3.5 h-3.5 text-muted-foreground" />
+                    </div>
+                    <p className="text-3xl font-bold">{getVolumeDisplay()}</p>
+                    <p className="text-sm text-muted-foreground">{labels.volume}</p>
+                    <div className="flex items-center gap-1 mt-2">
+                      <TrendingUp className="w-3 h-3 text-accent" />
+                      <span className="text-xs text-accent">+12% from last week</span>
+                    </div>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" className="max-w-[200px]">
+                  <p className="text-xs font-medium mb-1">Also known as:</p>
+                  <ul className="text-xs text-muted-foreground space-y-0.5">
+                    <li>• Clinical: Patients Analyzed</li>
+                    <li>• Business: Inference Count</li>
+                    <li>• Technical: Total Requests</li>
+                  </ul>
+                </TooltipContent>
+              </Tooltip>
+            </CardContent>
+          </Card>
+
+          {/* Speed / Responsiveness */}
+          <Card className="border-0 shadow-sm">
+            <CardContent className="p-5">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="cursor-help">
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Speed</span>
+                      <Info className="w-3.5 h-3.5 text-muted-foreground" />
+                    </div>
+                    <p className="text-3xl font-bold">{getSpeedDisplay()}</p>
+                    <p className="text-sm text-muted-foreground">{labels.speed}</p>
+                    <div className="flex items-center gap-1 mt-2">
+                      <TrendingUp className="w-3 h-3 text-accent" />
+                      <span className="text-xs text-accent">-18ms improvement</span>
+                    </div>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" className="max-w-[200px]">
+                  <p className="text-xs font-medium mb-1">Also known as:</p>
+                  <ul className="text-xs text-muted-foreground space-y-0.5">
+                    <li>• Clinical: Time to Result</li>
+                    <li>• Business: Model Latency</li>
+                    <li>• Technical: P99 Latency</li>
+                  </ul>
+                </TooltipContent>
+              </Tooltip>
+            </CardContent>
+          </Card>
+
+          {/* Failures / Friction */}
+          <Card className="border-0 shadow-sm">
+            <CardContent className="p-5">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="cursor-help">
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Friction</span>
+                      <Info className="w-3.5 h-3.5 text-muted-foreground" />
+                    </div>
+                    <p className="text-3xl font-bold">{getFailuresDisplay()}</p>
+                    <p className="text-sm text-muted-foreground">{labels.failures}</p>
+                    <div className="flex items-center gap-1 mt-2">
+                      <AlertTriangle className="w-3 h-3 text-amber-500" />
+                      <span className="text-xs text-amber-500">+3 from yesterday</span>
+                    </div>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" className="max-w-[200px]">
+                  <p className="text-xs font-medium mb-1">Also known as:</p>
+                  <ul className="text-xs text-muted-foreground space-y-0.5">
+                    <li>• Clinical: Failed Screenings</li>
+                    <li>• Business: Error Rate %</li>
+                    <li>• Technical: 4xx/5xx Responses</li>
+                  </ul>
+                </TooltipContent>
+              </Tooltip>
+            </CardContent>
+          </Card>
+
+          {/* Value / Impact */}
+          <Card className="border-0 shadow-sm">
+            <CardContent className="p-5">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="cursor-help">
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Impact</span>
+                      <Info className="w-3.5 h-3.5 text-muted-foreground" />
+                    </div>
+                    <p className="text-3xl font-bold">{getValueDisplay()}</p>
+                    <p className="text-sm text-muted-foreground">{labels.value}</p>
+                    <div className="flex items-center gap-1 mt-2">
+                      <TrendingUp className="w-3 h-3 text-accent" />
+                      <span className="text-xs text-accent">+8% this month</span>
+                    </div>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" className="max-w-[200px]">
+                  <p className="text-xs font-medium mb-1">Also known as:</p>
+                  <ul className="text-xs text-muted-foreground space-y-0.5">
+                    <li>• Clinical: Hours Saved</li>
+                    <li>• Business: Revenue Generated</li>
+                    <li>• Technical: Compute Cost</li>
+                  </ul>
+                </TooltipContent>
+              </Tooltip>
+            </CardContent>
+          </Card>
         </motion.div>
 
-        {/* Performance Chart Placeholder & Activity */}
-        <div className="grid grid-cols-2 gap-6">
-          {/* Chart Card */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-          >
-            <Card className="border-0 shadow-sm">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="font-semibold">Performance</h3>
-                  <Badge variant="secondary" className="text-xs">This Week</Badge>
-                </div>
-                
-                {/* Simple chart visualization */}
-                <div className="h-48 flex items-end gap-2">
-                  {[40, 65, 45, 80, 55, 70, 85].map((height, i) => (
-                    <div key={i} className="flex-1 flex flex-col items-center gap-2">
-                      <div 
-                        className="w-full bg-accent/20 rounded-t-lg relative overflow-hidden transition-all hover:bg-accent/30"
-                        style={{ height: `${height}%` }}
-                      >
-                        <div 
-                          className="absolute bottom-0 left-0 right-0 bg-accent rounded-t-lg"
-                          style={{ height: `${height * 0.7}%` }}
-                        />
-                      </div>
-                      <span className="text-xs text-muted-foreground">
-                        {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][i]}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
+        {/* Bottom Row: Context Tabs - Role-specific Details */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+        >
+          <Card className="border-0 shadow-sm">
+            <CardContent className="p-6">
+              <Tabs defaultValue="apps" className="w-full">
+                <TabsList className="bg-muted/50 mb-4">
+                  <TabsTrigger value="apps" className="flex items-center gap-2">
+                    <Rocket className="w-4 h-4" />
+                    My Apps
+                  </TabsTrigger>
+                  <TabsTrigger value="integrations" className="flex items-center gap-2">
+                    <Building2 className="w-4 h-4" />
+                    My Integrations
+                  </TabsTrigger>
+                  <TabsTrigger value="logs" className="flex items-center gap-2">
+                    <Code2 className="w-4 h-4" />
+                    Logs
+                  </TabsTrigger>
+                </TabsList>
 
-          {/* Recent Activity */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-          >
-            <Card className="border-0 shadow-sm">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="font-semibold">Recent Activity</h3>
-                  <Button variant="ghost" size="sm" className="text-xs text-muted-foreground">
-                    View all
-                  </Button>
-                </div>
-                
-                <div className="space-y-4">
-                  {recentActivity.map((activity, i) => (
-                    <div key={i} className="flex items-start gap-3">
-                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${
-                        activity.type === 'update' ? 'bg-blue-100 text-blue-600' :
-                        activity.type === 'install' ? 'bg-green-100 text-green-600' :
-                        activity.type === 'settings' ? 'bg-amber-100 text-amber-600' :
-                        'bg-purple-100 text-purple-600'
-                      }`}>
-                        {activity.type === 'update' && <Zap className="w-4 h-4" />}
-                        {activity.type === 'install' && <CheckCircle2 className="w-4 h-4" />}
-                        {activity.type === 'settings' && <Settings className="w-4 h-4" />}
-                        {activity.type === 'report' && <FileText className="w-4 h-4" />}
+                {/* My Apps Tab (Startup View) */}
+                <TabsContent value="apps">
+                  <div className="space-y-3">
+                    {myApps.map((app, i) => (
+                      <div key={i} className="flex items-center justify-between p-4 bg-muted/30 rounded-xl hover:bg-muted/50 transition-colors">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-lg bg-foreground/10 flex items-center justify-center">
+                            <Boxes className="w-5 h-5" />
+                          </div>
+                          <div>
+                            <p className="font-medium">{app.name}</p>
+                            <p className="text-xs text-muted-foreground">{app.calls} calls this week</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <div className="text-right">
+                            <p className="font-medium text-accent">{app.revenue}</p>
+                            <p className="text-xs text-muted-foreground">revenue</p>
+                          </div>
+                          <Badge variant={app.status === "active" ? "default" : "secondary"} 
+                            className={app.status === "active" ? "bg-accent/10 text-accent border-0" : ""}>
+                            {app.status}
+                          </Badge>
+                        </div>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm">
-                          <span className="font-medium">{activity.user}</span>
-                          {' '}{activity.action}{' '}
-                          <span className="text-accent font-medium">{activity.target}</span>
-                        </p>
-                        <p className="text-xs text-muted-foreground">{activity.time}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-        </div>
-      </main>
-
-      {/* Right Sidebar - User Profile */}
-      <aside className="w-80 bg-background border-l p-6 min-h-screen sticky top-0">
-        {/* User Profile Card */}
-        <div className="text-center mb-8">
-          <div className="w-20 h-20 rounded-full bg-gradient-to-br from-accent/20 to-accent/5 border-4 border-accent/20 flex items-center justify-center mx-auto mb-4">
-            <span className="text-2xl font-bold text-accent">
-              {(profile?.name || profile?.username || 'U').charAt(0).toUpperCase()}
-            </span>
-          </div>
-          <h3 className="font-semibold text-lg">{profile?.name || profile?.username}</h3>
-          <p className="text-sm text-muted-foreground">@{profile?.username}</p>
-          
-          <div className="flex items-center justify-center gap-2 mt-4">
-            <Button variant="outline" size="sm" className="rounded-full">
-              <Settings className="w-4 h-4" />
-            </Button>
-            <Button variant="outline" size="sm" className="rounded-full">
-              <MessageSquare className="w-4 h-4" />
-            </Button>
-          </div>
-        </div>
-
-        {/* Your Roles */}
-        <div className="mb-6">
-          <h4 className="text-sm font-semibold mb-3">Your Roles</h4>
-          <div className="space-y-2">
-            {[
-              { key: 'is_it', label: 'IT Admin', icon: Building2, color: 'bg-blue-100 text-blue-600' },
-              { key: 'is_startup', label: 'AI Startup', icon: Rocket, color: 'bg-purple-100 text-purple-600' },
-              { key: 'is_developer', label: 'Developer', icon: Code2, color: 'bg-green-100 text-green-600' },
-            ].map((role) => {
-              const hasRole = profile && profile[role.key as keyof Profile];
-              return (
-                <div 
-                  key={role.key}
-                  className={`flex items-center gap-3 p-2 rounded-lg ${
-                    hasRole ? 'bg-muted' : 'opacity-50'
-                  }`}
-                >
-                  <div className={`w-8 h-8 rounded-lg ${role.color} flex items-center justify-center`}>
-                    <role.icon className="w-4 h-4" />
+                    ))}
                   </div>
-                  <span className="text-sm font-medium flex-1">{role.label}</span>
-                  {hasRole ? (
-                    <CheckCircle2 className="w-4 h-4 text-accent" />
-                  ) : (
-                    <Badge variant="secondary" className="text-[10px]">Locked</Badge>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </div>
+                </TabsContent>
 
-        {/* Quick Stats */}
-        <div>
-          <h4 className="text-sm font-semibold mb-3">This Month</h4>
-          <div className="space-y-3">
-            <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-              <span className="text-sm text-muted-foreground">Modules Used</span>
-              <span className="font-semibold">6</span>
-            </div>
-            <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-              <span className="text-sm text-muted-foreground">API Calls</span>
-              <span className="font-semibold">2,847</span>
-            </div>
-            <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-              <span className="text-sm text-muted-foreground">Uptime</span>
-              <span className="font-semibold text-accent">99.9%</span>
-            </div>
-          </div>
-        </div>
-      </aside>
-    </div>
+                {/* My Integrations Tab (Hospital View) */}
+                <TabsContent value="integrations">
+                  <div className="space-y-3">
+                    {myIntegrations.map((integration, i) => (
+                      <div key={i} className="flex items-center justify-between p-4 bg-muted/30 rounded-xl hover:bg-muted/50 transition-colors">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-lg bg-foreground/10 flex items-center justify-center">
+                            <Building2 className="w-5 h-5" />
+                          </div>
+                          <div>
+                            <p className="font-medium">{integration.name}</p>
+                            <p className="text-xs text-muted-foreground">{integration.patients} patients</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <div className="text-right">
+                            <p className="text-sm text-muted-foreground">{integration.lastSync}</p>
+                          </div>
+                          <Badge variant={integration.status === "connected" ? "default" : "secondary"}
+                            className={integration.status === "connected" ? "bg-accent/10 text-accent border-0" : "bg-blue-100 text-blue-600 border-0"}>
+                            {integration.status === "syncing" && (
+                              <span className="w-2 h-2 bg-blue-500 rounded-full animate-pulse mr-1.5" />
+                            )}
+                            {integration.status}
+                          </Badge>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </TabsContent>
+
+                {/* Logs Tab (Dev View) */}
+                <TabsContent value="logs">
+                  <div className="bg-foreground text-background rounded-xl overflow-hidden">
+                    <div className="p-3 border-b border-white/10 flex items-center justify-between">
+                      <span className="text-xs text-background/50 font-mono">Recent API Logs</span>
+                      <Badge variant="secondary" className="bg-white/10 text-background/70 border-0 text-xs">
+                        Live
+                      </Badge>
+                    </div>
+                    <div className="p-4 font-mono text-xs space-y-2 max-h-[300px] overflow-y-auto">
+                      {recentLogs.map((log, i) => (
+                        <div key={i} className="flex items-start gap-3">
+                          <span className="text-background/40 w-[180px] flex-shrink-0">
+                            {new Date(log.timestamp).toLocaleTimeString()}
+                          </span>
+                          <span className={`w-12 flex-shrink-0 ${
+                            log.level === "error" ? "text-red-400" :
+                            log.level === "warn" ? "text-amber-400" :
+                            "text-accent"
+                          }`}>
+                            [{log.level.toUpperCase()}]
+                          </span>
+                          <span className="text-background/80">{log.message}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </TabsContent>
+              </Tabs>
+            </CardContent>
+          </Card>
+        </motion.div>
+      </div>
+    </TooltipProvider>
   );
 }

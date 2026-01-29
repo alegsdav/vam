@@ -35,7 +35,7 @@ type ModuleWithProfile = Module & {
 };
 
 export default function ScrubAdminDashboard() {
-  const [modules, setModules] = useState<ModuleWithProfile[]>([]);
+  const [allModules, setAllModules] = useState<ModuleWithProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [filter, setFilter] = useState<"all" | "pending" | "approved" | "rejected">("pending");
@@ -45,7 +45,8 @@ export default function ScrubAdminDashboard() {
   const fetchModules = async () => {
     setLoading(true);
     
-    let query = supabase
+    // Always fetch all modules for stats
+    const { data, error } = await supabase
       .from("modules")
       .select(`
         *,
@@ -57,24 +58,23 @@ export default function ScrubAdminDashboard() {
       `)
       .order("created_at", { ascending: false });
 
-    if (filter !== "all") {
-      query = query.eq("status", filter);
-    }
-
-    const { data, error } = await query;
-
     if (error) {
       console.error("Error fetching modules:", error);
     } else {
-      setModules(data as ModuleWithProfile[]);
+      setAllModules(data as ModuleWithProfile[]);
     }
     
     setLoading(false);
   };
 
+  // Filter modules for display based on selected filter
+  const filteredModules = filter === "all" 
+    ? allModules 
+    : allModules.filter(m => m.status === filter);
+
   useEffect(() => {
     fetchModules();
-  }, [filter]);
+  }, []);
 
   const handleStatusChange = async (moduleId: string, newStatus: "approved" | "rejected") => {
     setActionLoading(moduleId);
@@ -125,7 +125,11 @@ export default function ScrubAdminDashboard() {
     }
   };
 
-  const pendingCount = modules.filter(m => m.status === "pending").length;
+  // Stats always use allModules (not affected by filter)
+  const pendingCount = allModules.filter(m => m.status === "pending").length;
+  const approvedCount = allModules.filter(m => m.status === "approved").length;
+  const rejectedCount = allModules.filter(m => m.status === "rejected").length;
+  const totalCount = allModules.length;
 
   return (
     <div className="min-h-screen bg-background">
@@ -161,13 +165,13 @@ export default function ScrubAdminDashboard() {
 
       {/* Main Content */}
       <div className="relative z-10 max-w-7xl mx-auto px-6 py-8">
-        {/* Stats */}
+        {/* Stats - Always show totals regardless of filter */}
         <div className="grid grid-cols-4 gap-4 mb-8">
           {[
             { label: "Pending Review", value: pendingCount, icon: Clock, color: "text-amber-500" },
-            { label: "Total Approved", value: modules.filter(m => m.status === "approved").length, icon: CheckCircle2, color: "text-accent" },
-            { label: "Total Rejected", value: modules.filter(m => m.status === "rejected").length, icon: XCircle, color: "text-red-500" },
-            { label: "Total Submissions", value: modules.length, icon: Package, color: "text-foreground" },
+            { label: "Total Approved", value: approvedCount, icon: CheckCircle2, color: "text-accent" },
+            { label: "Total Rejected", value: rejectedCount, icon: XCircle, color: "text-red-500" },
+            { label: "Total Submissions", value: totalCount, icon: Package, color: "text-foreground" },
           ].map((stat, i) => (
             <motion.div
               key={stat.label}
@@ -230,7 +234,7 @@ export default function ScrubAdminDashboard() {
               <div className="flex items-center justify-center py-12">
                 <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
               </div>
-            ) : modules.length === 0 ? (
+            ) : filteredModules.length === 0 ? (
               <div className="text-center py-12 text-muted-foreground">
                 <Package className="w-12 h-12 mx-auto mb-4 opacity-50" />
                 <p>No modules found</p>
@@ -240,7 +244,7 @@ export default function ScrubAdminDashboard() {
               </div>
             ) : (
               <div className="space-y-4">
-                {modules.map((module, i) => (
+                {filteredModules.map((module, i) => (
                   <motion.div
                     key={module.id}
                     initial={{ opacity: 0, y: 10 }}

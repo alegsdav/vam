@@ -2,13 +2,10 @@
 
 export const dynamic = 'force-dynamic';
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { 
-  ArrowLeft, 
-  Rocket, 
   Send,
   CheckCircle2,
   Loader2,
@@ -16,7 +13,10 @@ import {
   Link2,
   FileText,
   Package,
-  Clock
+  Clock,
+  TrendingUp,
+  Eye,
+  BarChart3
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -26,10 +26,15 @@ import { Textarea } from "@/components/ui/textarea";
 import { createClient } from "@/lib/supabase/client";
 
 type SubmissionState = "form" | "submitting" | "success";
-
 type SubmissionStep = "validating" | "uploading" | "processing" | "complete";
 
-export default function StartupPortal() {
+// Mock data for existing submissions
+const mockSubmissions = [
+  { name: "Cardiac Risk AI", status: "approved", views: 1240, date: "Jan 15, 2026" },
+  { name: "Diabetes Predictor", status: "pending", views: 0, date: "Jan 20, 2026" },
+];
+
+export default function StartupPage() {
   const [state, setState] = useState<SubmissionState>("form");
   const [step, setStep] = useState<SubmissionStep>("validating");
   const [error, setError] = useState<string | null>(null);
@@ -41,7 +46,6 @@ export default function StartupPortal() {
     link: ""
   });
 
-  const router = useRouter();
   const supabase = createClient();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -55,17 +59,14 @@ export default function StartupPortal() {
     e.preventDefault();
     setError(null);
 
-    // Basic validation
     if (!formData.name.trim() || !formData.description.trim() || !formData.estimated_cost_year || !formData.link.trim()) {
       setError("Please fill in all fields");
       return;
     }
 
-    // Start submission animation
     setState("submitting");
     setStep("validating");
 
-    // Get current user
     const { data: { user } } = await supabase.auth.getUser();
     
     if (!user) {
@@ -74,14 +75,12 @@ export default function StartupPortal() {
       return;
     }
 
-    // Simulate steps
     await new Promise(r => setTimeout(r, 1200));
     setStep("uploading");
     
     await new Promise(r => setTimeout(r, 1500));
     setStep("processing");
 
-    // Actually insert into database
     const { error: insertError } = await supabase
       .from("modules")
       .insert({
@@ -110,274 +109,303 @@ export default function StartupPortal() {
   const isFormValid = formData.name && formData.description && formData.estimated_cost_year && formData.link;
 
   return (
-    <div className="min-h-screen bg-foreground text-background">
-      {/* Header */}
-      <header className="border-b border-white/10">
-        <div className="max-w-7xl mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-6">
-              <Link href="/portal" className="flex items-center gap-2 text-background/50 hover:text-background transition-colors">
-                <ArrowLeft className="w-4 h-4" />
-                <span className="text-sm">Back to Portal</span>
-              </Link>
-              <div className="w-px h-6 bg-white/20" />
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-accent flex items-center justify-center">
-                  <Rocket className="w-5 h-5 text-white" />
+    <div>
+      {/* Page Header */}
+      <motion.div 
+        className="mb-6"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+      >
+        <h1 className="text-3xl font-bold mb-1">AI Startup Portal</h1>
+        <p className="text-muted-foreground">Submit your AI modules to the Scrub marketplace</p>
+      </motion.div>
+
+      <div className="grid grid-cols-3 gap-6">
+        {/* Main Form Area */}
+        <div className="col-span-2">
+          <AnimatePresence mode="wait">
+            {/* Form State */}
+            {state === "form" && (
+              <motion.div
+                key="form"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+              >
+                <Card className="border-0 shadow-sm">
+                  <CardHeader>
+                    <CardTitle>Submit New Module</CardTitle>
+                    <CardDescription>Fill in the details below to submit your AI module for review</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <form onSubmit={handleSubmit} className="space-y-5">
+                      <div>
+                        <label className="block text-sm font-medium mb-2">
+                          <Package className="w-4 h-4 inline mr-2" />
+                          Module Name
+                        </label>
+                        <Input
+                          name="name"
+                          value={formData.name}
+                          onChange={handleChange}
+                          placeholder="e.g., Sepsis Prediction AI"
+                          className="h-11"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium mb-2">
+                          <FileText className="w-4 h-4 inline mr-2" />
+                          Description
+                        </label>
+                        <Textarea
+                          name="description"
+                          value={formData.description}
+                          onChange={handleChange}
+                          placeholder="Describe what your AI module does, its key features, and use cases..."
+                          className="min-h-[100px]"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium mb-2">
+                          <DollarSign className="w-4 h-4 inline mr-2" />
+                          Estimated Cost per Year (USD)
+                        </label>
+                        <Input
+                          name="estimated_cost_year"
+                          type="number"
+                          value={formData.estimated_cost_year}
+                          onChange={handleChange}
+                          placeholder="e.g., 25000"
+                          className="h-11"
+                        />
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Enter the estimated annual subscription cost for healthcare organizations
+                        </p>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium mb-2">
+                          <Link2 className="w-4 h-4 inline mr-2" />
+                          API or Documentation Link
+                        </label>
+                        <Input
+                          name="link"
+                          type="url"
+                          value={formData.link}
+                          onChange={handleChange}
+                          placeholder="https://docs.yourcompany.com/api"
+                          className="h-11"
+                        />
+                      </div>
+
+                      {error && (
+                        <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">
+                          {error}
+                        </div>
+                      )}
+
+                      <Button 
+                        type="submit"
+                        className="w-full h-11 bg-foreground hover:bg-foreground/90"
+                        disabled={!isFormValid}
+                      >
+                        <Send className="w-4 h-4 mr-2" />
+                        Submit for Review
+                      </Button>
+                    </form>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            )}
+
+            {/* Submitting State */}
+            {state === "submitting" && (
+              <motion.div
+                key="submitting"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+              >
+                <Card className="border-0 shadow-sm">
+                  <CardContent className="p-12 text-center">
+                    <div className="relative w-20 h-20 mx-auto mb-6">
+                      <Loader2 className="w-20 h-20 text-accent animate-spin" />
+                    </div>
+
+                    <h3 className="text-xl font-semibold mb-2">
+                      {step === "validating" && "Validating your submission..."}
+                      {step === "uploading" && "Uploading module details..."}
+                      {step === "processing" && "Processing submission..."}
+                      {step === "complete" && "Almost done..."}
+                    </h3>
+                    
+                    <p className="text-muted-foreground">
+                      {step === "validating" && "Checking all required fields"}
+                      {step === "uploading" && "Securely transmitting data"}
+                      {step === "processing" && "Creating your module entry"}
+                      {step === "complete" && "Finalizing submission"}
+                    </p>
+
+                    <div className="flex items-center justify-center gap-2 mt-8">
+                      {["validating", "uploading", "processing", "complete"].map((s, i) => {
+                        const steps: SubmissionStep[] = ["validating", "uploading", "processing", "complete"];
+                        const currentIndex = steps.indexOf(step);
+                        const isDone = i <= currentIndex;
+                        
+                        return (
+                          <div 
+                            key={s}
+                            className={`w-2 h-2 rounded-full transition-all ${
+                              isDone ? 'bg-accent' : 'bg-muted'
+                            }`}
+                          />
+                        );
+                      })}
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            )}
+
+            {/* Success State */}
+            {state === "success" && (
+              <motion.div
+                key="success"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+              >
+                <Card className="border-0 shadow-sm">
+                  <CardContent className="p-12 text-center">
+                    <motion.div
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      transition={{ delay: 0.2, type: "spring" }}
+                      className="w-20 h-20 rounded-full bg-accent flex items-center justify-center mx-auto mb-6"
+                    >
+                      <CheckCircle2 className="w-10 h-10 text-white" />
+                    </motion.div>
+
+                    <h2 className="text-2xl font-semibold mb-2">Submission Complete!</h2>
+                    <p className="text-muted-foreground mb-6">
+                      Your module has been submitted for review.
+                    </p>
+
+                    <div className="bg-muted/50 rounded-xl p-4 mb-6 text-left max-w-sm mx-auto">
+                      <div className="space-y-3">
+                        <div>
+                          <p className="text-xs text-muted-foreground">Module Name</p>
+                          <p className="font-medium">{formData.name}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground">Status</p>
+                          <Badge className="bg-amber-100 text-amber-700 border-0">
+                            Pending Review
+                          </Badge>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-center gap-3">
+                      <Button 
+                        variant="outline"
+                        onClick={() => {
+                          setFormData({ name: "", description: "", estimated_cost_year: "", link: "" });
+                          setState("form");
+                        }}
+                      >
+                        Submit Another
+                      </Button>
+                      <Button asChild>
+                        <Link href="/portal">
+                          Back to Dashboard
+                        </Link>
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
+        {/* Sidebar */}
+        <div className="space-y-6">
+          {/* Review Process Info */}
+          <Card className="border-0 shadow-sm">
+            <CardContent className="p-5">
+              <div className="flex items-start gap-3">
+                <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center flex-shrink-0">
+                  <Clock className="w-5 h-5 text-accent" />
                 </div>
                 <div>
-                  <h1 className="font-semibold text-lg">AI Startup Portal</h1>
-                  <p className="text-xs text-background/50">Submit your modules</p>
+                  <h3 className="font-semibold mb-1">Review Process</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Our team reviews submissions within 2-3 business days. You'll receive an email once approved.
+                  </p>
                 </div>
               </div>
-            </div>
-            <Badge className="bg-white/10 text-background/70 border-0">
-              Scrub Marketplace
-            </Badge>
-          </div>
-        </div>
-      </header>
+            </CardContent>
+          </Card>
 
-      {/* Main Content */}
-      <div className="max-w-2xl mx-auto px-6 py-12">
-        <AnimatePresence mode="wait">
-          {/* Form State */}
-          {state === "form" && (
-            <motion.div
-              key="form"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-            >
-              <div className="text-center mb-8">
-                <h2 className="text-3xl font-semibold mb-2">Submit Your AI Module</h2>
-                <p className="text-background/60">
-                  Fill in the details below to submit your module for review
-                </p>
-              </div>
-
-              <Card className="bg-white/5 border-white/10">
-                <CardContent className="p-8">
-                  <form onSubmit={handleSubmit} className="space-y-6">
-                    <div>
-                      <label className="block text-sm font-medium mb-2">
-                        <Package className="w-4 h-4 inline mr-2" />
-                        Module Name
-                      </label>
-                      <Input
-                        name="name"
-                        value={formData.name}
-                        onChange={handleChange}
-                        placeholder="e.g., Sepsis Prediction AI"
-                        className="bg-white/10 border-white/20 text-background placeholder:text-background/40 h-12"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium mb-2">
-                        <FileText className="w-4 h-4 inline mr-2" />
-                        Description
-                      </label>
-                      <Textarea
-                        name="description"
-                        value={formData.description}
-                        onChange={handleChange}
-                        placeholder="Describe what your AI module does, its key features, and use cases..."
-                        className="bg-white/10 border-white/20 text-background placeholder:text-background/40 min-h-[120px]"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium mb-2">
-                        <DollarSign className="w-4 h-4 inline mr-2" />
-                        Estimated Cost per Year (USD)
-                      </label>
-                      <Input
-                        name="estimated_cost_year"
-                        type="number"
-                        value={formData.estimated_cost_year}
-                        onChange={handleChange}
-                        placeholder="e.g., 25000"
-                        className="bg-white/10 border-white/20 text-background placeholder:text-background/40 h-12"
-                      />
-                      <p className="text-xs text-background/40 mt-1">
-                        Enter the estimated annual subscription cost for healthcare organizations
-                      </p>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium mb-2">
-                        <Link2 className="w-4 h-4 inline mr-2" />
-                        API or Documentation Link
-                      </label>
-                      <Input
-                        name="link"
-                        type="url"
-                        value={formData.link}
-                        onChange={handleChange}
-                        placeholder="https://docs.yourcompany.com/api"
-                        className="bg-white/10 border-white/20 text-background placeholder:text-background/40 h-12"
-                      />
-                    </div>
-
-                    {error && (
-                      <div className="p-4 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-sm">
-                        {error}
-                      </div>
-                    )}
-
-                    <div className="p-4 bg-accent/10 border border-accent/30 rounded-lg">
-                      <div className="flex items-start gap-3">
-                        <Clock className="w-5 h-5 text-accent mt-0.5" />
-                        <div>
-                          <p className="font-medium text-accent">Review Process</p>
-                          <p className="text-sm text-background/60 mt-1">
-                            After submission, our team will review your module. You'll receive 
-                            an email once it's approved and live in the marketplace.
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-
-                    <Button 
-                      type="submit"
-                      className="w-full h-12 bg-accent hover:bg-accent/90 text-white"
-                      disabled={!isFormValid}
-                    >
-                      <Send className="w-5 h-5 mr-2" />
-                      Submit for Review
-                    </Button>
-                  </form>
-                </CardContent>
-              </Card>
-            </motion.div>
-          )}
-
-          {/* Submitting State */}
-          {state === "submitting" && (
-            <motion.div
-              key="submitting"
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="text-center py-16"
-            >
-              <div className="relative w-24 h-24 mx-auto mb-8">
-                <Loader2 className="w-24 h-24 text-accent animate-spin" />
-              </div>
-
-              <h3 className="text-2xl font-semibold mb-2">
-                {step === "validating" && "Validating your submission..."}
-                {step === "uploading" && "Uploading module details..."}
-                {step === "processing" && "Processing submission..."}
-                {step === "complete" && "Almost done..."}
-              </h3>
-              
-              <p className="text-background/60">
-                {step === "validating" && "Checking all required fields"}
-                {step === "uploading" && "Securely transmitting data"}
-                {step === "processing" && "Creating your module entry"}
-                {step === "complete" && "Finalizing submission"}
-              </p>
-
-              <div className="flex items-center justify-center gap-2 mt-8">
-                {["validating", "uploading", "processing", "complete"].map((s, i) => {
-                  const steps: SubmissionStep[] = ["validating", "uploading", "processing", "complete"];
-                  const currentIndex = steps.indexOf(step);
-                  const stepIndex = i;
-                  const isDone = stepIndex <= currentIndex;
-                  
-                  return (
-                    <div 
-                      key={s}
-                      className={`w-2 h-2 rounded-full transition-all ${
-                        isDone ? 'bg-accent' : 'bg-white/20'
+          {/* Stats */}
+          <Card className="border-0 shadow-sm">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base">Your Modules</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {mockSubmissions.map((submission, i) => (
+                <div key={i} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                  <div>
+                    <p className="font-medium text-sm">{submission.name}</p>
+                    <p className="text-xs text-muted-foreground">{submission.date}</p>
+                  </div>
+                  <div className="text-right">
+                    <Badge 
+                      variant="secondary" 
+                      className={`text-xs ${
+                        submission.status === 'approved' 
+                          ? 'bg-accent/10 text-accent' 
+                          : 'bg-amber-100 text-amber-700'
                       }`}
-                    />
-                  );
-                })}
-              </div>
-            </motion.div>
-          )}
-
-          {/* Success State */}
-          {state === "success" && (
-            <motion.div
-              key="success"
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="text-center py-16"
-            >
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ delay: 0.2, type: "spring" }}
-                className="w-24 h-24 rounded-full bg-accent flex items-center justify-center mx-auto mb-8"
-              >
-                <CheckCircle2 className="w-12 h-12 text-white" />
-              </motion.div>
-
-              <h2 className="text-4xl font-semibold mb-4">Submission Complete! 🎉</h2>
-              <p className="text-xl text-background/60 mb-8">
-                Your module has been submitted for review.
-              </p>
-
-              <Card className="bg-white/5 border-white/10 max-w-lg mx-auto">
-                <CardContent className="p-8">
-                  <div className="text-left space-y-4">
-                    <div>
-                      <p className="text-sm text-background/50">Module Name</p>
-                      <p className="font-semibold">{formData.name}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-background/50">Status</p>
-                      <Badge className="bg-amber-500/20 text-amber-400 border-0">
-                        Pending Review
-                      </Badge>
-                    </div>
+                    >
+                      {submission.status}
+                    </Badge>
+                    {submission.status === 'approved' && (
+                      <p className="text-xs text-muted-foreground mt-1 flex items-center justify-end gap-1">
+                        <Eye className="w-3 h-3" />
+                        {submission.views} views
+                      </p>
+                    )}
                   </div>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
 
-                  <div className="mt-6 pt-6 border-t border-white/10">
-                    <p className="text-sm text-background/60 mb-4">What happens next:</p>
-                    <div className="text-left space-y-3">
-                      {[
-                        "Our team will review your submission within 2-3 business days",
-                        "You'll receive an email notification once reviewed",
-                        "If approved, your module will appear in the marketplace"
-                      ].map((item, i) => (
-                        <div key={i} className="flex items-start gap-3">
-                          <CheckCircle2 className="w-4 h-4 text-accent flex-shrink-0 mt-0.5" />
-                          <span className="text-sm">{item}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <div className="flex items-center justify-center gap-4 mt-8">
-                <Button 
-                  variant="outline"
-                  className="border-white/20 text-background hover:bg-white/10 bg-transparent"
-                  onClick={() => {
-                    setFormData({ name: "", description: "", estimated_cost_year: "", link: "" });
-                    setState("form");
-                  }}
-                >
-                  Submit Another
-                </Button>
-                <Button 
-                  className="bg-white text-foreground hover:bg-white/90"
-                  asChild
-                >
-                  <Link href="/portal">
-                    Back to Portal
-                  </Link>
-                </Button>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+          {/* Tips */}
+          <Card className="border-0 shadow-sm">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base">Tips for Approval</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                {[
+                  "Provide detailed documentation",
+                  "Include accuracy metrics",
+                  "List supported data formats",
+                  "Describe HIPAA compliance"
+                ].map((tip, i) => (
+                  <li key={i} className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-accent flex-shrink-0" />
+                    {tip}
+                  </li>
+                ))}
+              </ul>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );

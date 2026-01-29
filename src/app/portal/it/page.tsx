@@ -2,15 +2,11 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import Link from "next/link";
 import { 
-  ArrowLeft, 
   LayoutDashboard,
   Store,
   Settings,
-  Building2,
   Activity,
-  TrendingUp,
   Clock,
   DollarSign,
   Boxes,
@@ -23,9 +19,8 @@ import {
   Check,
   X,
   Zap,
-  ArrowUpRight,
-  BarChart3,
-  Users
+  TrendingUp,
+  TrendingDown
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -138,7 +133,7 @@ const marketplaceApps = [
 type Section = "dashboard" | "marketplace" | "settings";
 type InstallState = "idle" | "connecting" | "authenticating" | "installing" | "complete";
 
-export default function ITView() {
+export default function ITAdminPage() {
   const [activeSection, setActiveSection] = useState<Section>("dashboard");
   const [search, setSearch] = useState("");
   const [selectedApp, setSelectedApp] = useState<typeof marketplaceApps[0] | null>(null);
@@ -172,315 +167,271 @@ export default function ITView() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex">
-      {/* Sidebar */}
-      <aside className="w-64 bg-foreground text-background flex flex-col">
-        {/* Logo */}
-        <div className="p-6 border-b border-white/10">
-          <Link href="/portal" className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-lg bg-accent flex items-center justify-center">
-              <span className="font-bold text-white">S</span>
-            </div>
-            <div>
-              <span className="font-semibold text-sm block">Scrub</span>
-              <span className="text-xs text-background/60">IT Console</span>
-            </div>
-          </Link>
-        </div>
+    <div>
+      {/* Page Header */}
+      <motion.div 
+        className="mb-6"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+      >
+        <h1 className="text-3xl font-bold mb-1">IT Admin</h1>
+        <p className="text-muted-foreground">Manage AI modules and monitor usage for your organization</p>
+      </motion.div>
 
-        {/* Hospital Info */}
-        <div className="p-4 border-b border-white/10">
-          <div className="flex items-center gap-3 p-3 bg-white/5 rounded-lg">
-            <Building2 className="w-5 h-5 text-background/70" />
-            <div>
-              <p className="text-sm font-medium">Memorial Health</p>
-              <p className="text-xs text-background/50">Enterprise Plan</p>
-            </div>
+      {/* Sub-navigation tabs */}
+      <motion.div 
+        className="flex gap-2 mb-6"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+      >
+        {[
+          { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
+          { id: "marketplace", label: "Marketplace", icon: Store },
+          { id: "settings", label: "Settings", icon: Settings },
+        ].map((item) => (
+          <Button
+            key={item.id}
+            variant={activeSection === item.id ? "default" : "outline"}
+            size="sm"
+            onClick={() => setActiveSection(item.id as Section)}
+            className={activeSection === item.id ? "bg-foreground text-background" : ""}
+          >
+            <item.icon className="w-4 h-4 mr-2" />
+            {item.label}
+            {item.id === "marketplace" && (
+              <Badge className="ml-2 bg-accent/20 text-accent border-0 text-xs">
+                {marketplaceApps.filter(a => !installedAppIds.includes(a.id)).length}
+              </Badge>
+            )}
+          </Button>
+        ))}
+      </motion.div>
+
+      {/* Dashboard View */}
+      {activeSection === "dashboard" && (
+        <div className="space-y-6">
+          {/* Metrics Grid */}
+          <div className="grid grid-cols-4 gap-4">
+            {[
+              { label: "API Calls (30d)", value: metrics.totalApiCalls, change: metrics.apiCallsChange, icon: Activity, positive: true },
+              { label: "Active Modules", value: metrics.activeModules, change: null, icon: Boxes },
+              { label: "Avg Latency", value: metrics.avgLatency, change: metrics.latencyChange, icon: Clock, positive: true },
+              { label: "Monthly Spend", value: metrics.monthlySpend, change: metrics.spendChange, icon: DollarSign, positive: false },
+            ].map((metric, i) => (
+              <motion.div
+                key={metric.label}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.05 }}
+              >
+                <Card className="border-0 shadow-sm">
+                  <CardContent className="p-5">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center">
+                        <metric.icon className="w-5 h-5 text-foreground" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground">{metric.label}</p>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xl font-bold">{metric.value}</span>
+                          {metric.change && (
+                            <span className={`text-xs font-medium flex items-center gap-0.5 ${metric.positive ? 'text-accent' : 'text-red-500'}`}>
+                              {metric.positive ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+                              {metric.change}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            ))}
+          </div>
+
+          {/* Installed Modules Table */}
+          <Card className="border-0 shadow-sm">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>Installed Modules</CardTitle>
+                  <CardDescription>AI modules active in your environment</CardDescription>
+                </div>
+                <Button onClick={() => setActiveSection("marketplace")} size="sm">
+                  <Store className="w-4 h-4 mr-2" />
+                  Browse Marketplace
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="border rounded-lg overflow-hidden">
+                <table className="w-full">
+                  <thead className="bg-muted/50">
+                    <tr className="text-left text-sm text-muted-foreground">
+                      <th className="px-4 py-3 font-medium">Module</th>
+                      <th className="px-4 py-3 font-medium">Vendor</th>
+                      <th className="px-4 py-3 font-medium text-right">API Calls (30d)</th>
+                      <th className="px-4 py-3 font-medium text-right">Avg Latency</th>
+                      <th className="px-4 py-3 font-medium text-right">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {installedModules.map((module) => (
+                      <tr key={module.id} className="border-t">
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center">
+                              <Boxes className="w-4 h-4 text-foreground" />
+                            </div>
+                            <span className="font-medium">{module.name}</span>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3 text-muted-foreground">{module.vendor}</td>
+                        <td className="px-4 py-3 text-right font-mono text-sm">{module.calls}</td>
+                        <td className="px-4 py-3 text-right font-mono text-sm">{module.latency}</td>
+                        <td className="px-4 py-3 text-right">
+                          <Badge variant="secondary" className="bg-accent/10 text-accent border-0">
+                            Active
+                          </Badge>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Quick Stats */}
+          <div className="grid grid-cols-2 gap-4">
+            <Card className="border-0 shadow-sm">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="font-semibold">Usage Trend</h3>
+                  <Badge variant="secondary" className="text-xs">Last 7 days</Badge>
+                </div>
+                <div className="flex items-end gap-1 h-32">
+                  {[40, 55, 45, 60, 75, 65, 80].map((height, i) => (
+                    <div key={i} className="flex-1 bg-accent/20 rounded-t relative" style={{ height: `${height}%` }}>
+                      <div className="absolute bottom-0 left-0 right-0 bg-accent rounded-t" style={{ height: `${height * 0.7}%` }} />
+                    </div>
+                  ))}
+                </div>
+                <div className="flex justify-between mt-2 text-xs text-muted-foreground">
+                  {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day) => (
+                    <span key={day}>{day}</span>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-0 shadow-sm">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="font-semibold">Top Performing</h3>
+                  <Badge variant="secondary" className="text-xs">By accuracy</Badge>
+                </div>
+                <div className="space-y-3">
+                  {[
+                    { name: "Sepsis AI Pro", accuracy: "94.2%" },
+                    { name: "ReadmitRisk", accuracy: "91.8%" },
+                    { name: "NoteGenius", accuracy: "89.5%" },
+                  ].map((item, i) => (
+                    <div key={i} className="flex items-center justify-between p-2 bg-muted/50 rounded-lg">
+                      <span className="text-sm font-medium">{item.name}</span>
+                      <span className="font-mono text-sm text-accent">{item.accuracy}</span>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </div>
+      )}
 
-        {/* Navigation */}
-        <nav className="flex-1 p-4 space-y-1">
-          {[
-            { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
-            { id: "marketplace", label: "Marketplace", icon: Store },
-            { id: "settings", label: "Settings", icon: Settings },
-          ].map((item) => (
-            <button
-              key={item.id}
-              onClick={() => setActiveSection(item.id as Section)}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors ${
-                activeSection === item.id 
-                  ? "bg-accent text-white" 
-                  : "text-background/70 hover:bg-white/5 hover:text-background"
-              }`}
-            >
-              <item.icon className="w-4 h-4" />
-              <span>{item.label}</span>
-              {item.id === "marketplace" && (
-                <Badge className="ml-auto bg-white/10 text-background/70 border-0 text-xs">
-                  {marketplaceApps.filter(a => !installedAppIds.includes(a.id)).length} new
-                </Badge>
-              )}
-            </button>
-          ))}
-        </nav>
+      {/* Marketplace View */}
+      {activeSection === "marketplace" && (
+        <div className="space-y-6">
+          {/* Search */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              placeholder="Search modules..."
+              className="pl-10 max-w-md"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
 
-        {/* Back to Demo */}
-        <div className="p-4 border-t border-white/10">
-          <Link 
-            href="/portal" 
-            className="flex items-center gap-2 text-sm text-background/50 hover:text-background transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Back to Portal
-          </Link>
-        </div>
-      </aside>
-
-      {/* Main Content */}
-      <main className="flex-1 overflow-auto">
-        {/* Dashboard View */}
-        {activeSection === "dashboard" && (
-          <div className="p-8">
-            <div className="mb-8">
-              <h1 className="text-2xl font-semibold mb-1">Dashboard</h1>
-              <p className="text-muted-foreground">Monitor your AI modules and usage</p>
-            </div>
-
-            {/* Metrics Grid */}
-            <div className="grid grid-cols-4 gap-4 mb-8">
-              {[
-                { label: "API Calls (30d)", value: metrics.totalApiCalls, change: metrics.apiCallsChange, icon: Activity, positive: true },
-                { label: "Active Modules", value: metrics.activeModules, change: null, icon: Boxes },
-                { label: "Avg Latency", value: metrics.avgLatency, change: metrics.latencyChange, icon: Clock, positive: true },
-                { label: "Monthly Spend", value: metrics.monthlySpend, change: metrics.spendChange, icon: DollarSign, positive: false },
-              ].map((metric, i) => (
+          {/* App Grid */}
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {filteredApps.map((app, i) => {
+              const isInstalled = installedAppIds.includes(app.id);
+              return (
                 <motion.div
-                  key={metric.label}
+                  key={app.id}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.05 }}
                 >
-                  <Card>
-                    <CardContent className="p-6">
-                      <div className="flex items-center justify-between mb-4">
-                        <metric.icon className="w-5 h-5 text-muted-foreground" />
-                        {metric.change && (
-                          <Badge 
-                            variant="secondary" 
-                            className={`text-xs ${metric.positive ? 'text-accent' : ''}`}
-                          >
-                            {metric.change}
+                  <Card 
+                    className={`cursor-pointer transition-all hover:shadow-md border-0 shadow-sm ${
+                      isInstalled ? 'ring-2 ring-accent/50 bg-accent/5' : 'hover:ring-1 hover:ring-foreground/10'
+                    }`}
+                    onClick={() => !isInstalled && setSelectedApp(app)}
+                  >
+                    <CardContent className="p-5">
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center">
+                          <Boxes className="w-5 h-5 text-foreground" />
+                        </div>
+                        {isInstalled ? (
+                          <Badge className="bg-accent text-white border-0">
+                            <Check className="w-3 h-3 mr-1" />
+                            Installed
                           </Badge>
+                        ) : (
+                          <Badge variant="secondary">{app.price}</Badge>
                         )}
                       </div>
-                      <p className="text-3xl font-semibold">{metric.value}</p>
-                      <p className="text-sm text-muted-foreground">{metric.label}</p>
+                      
+                      <h3 className="font-semibold mb-1">{app.name}</h3>
+                      <p className="text-sm text-muted-foreground mb-2">{app.vendor}</p>
+                      <p className="text-sm text-muted-foreground mb-4 line-clamp-2">{app.description}</p>
+                      
+                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                        <div className="flex items-center gap-1">
+                          <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
+                          <span>{app.rating}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Download className="w-4 h-4" />
+                          <span>{app.installs}</span>
+                        </div>
+                        {app.certified && (
+                          <div className="flex items-center gap-1 ml-auto">
+                            <Shield className="w-4 h-4 text-accent" />
+                          </div>
+                        )}
+                      </div>
                     </CardContent>
                   </Card>
                 </motion.div>
-              ))}
-            </div>
-
-            {/* Installed Modules Table */}
-            <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle>Installed Modules</CardTitle>
-                    <CardDescription>AI modules active in your environment</CardDescription>
-                  </div>
-                  <Button onClick={() => setActiveSection("marketplace")}>
-                    <Store className="w-4 h-4 mr-2" />
-                    Browse Marketplace
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="border rounded-lg overflow-hidden">
-                  <table className="w-full">
-                    <thead className="bg-muted/50">
-                      <tr className="text-left text-sm text-muted-foreground">
-                        <th className="px-4 py-3 font-medium">Module</th>
-                        <th className="px-4 py-3 font-medium">Vendor</th>
-                        <th className="px-4 py-3 font-medium text-right">API Calls (30d)</th>
-                        <th className="px-4 py-3 font-medium text-right">Avg Latency</th>
-                        <th className="px-4 py-3 font-medium text-right">Status</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {installedModules.map((module, i) => (
-                        <tr key={module.id} className="border-t">
-                          <td className="px-4 py-3">
-                            <div className="flex items-center gap-3">
-                              <div className="w-8 h-8 rounded-lg bg-foreground flex items-center justify-center">
-                                <Boxes className="w-4 h-4 text-background" />
-                              </div>
-                              <span className="font-medium">{module.name}</span>
-                            </div>
-                          </td>
-                          <td className="px-4 py-3 text-muted-foreground">{module.vendor}</td>
-                          <td className="px-4 py-3 text-right font-mono">{module.calls}</td>
-                          <td className="px-4 py-3 text-right font-mono">{module.latency}</td>
-                          <td className="px-4 py-3 text-right">
-                            <Badge variant="secondary" className="bg-accent/10 text-accent">
-                              Active
-                            </Badge>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Quick Stats */}
-            <div className="grid grid-cols-2 gap-4 mt-6">
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="font-semibold">Usage Trend</h3>
-                    <Badge variant="secondary">Last 7 days</Badge>
-                  </div>
-                  <div className="flex items-end gap-1 h-32">
-                    {[40, 55, 45, 60, 75, 65, 80].map((height, i) => (
-                      <div key={i} className="flex-1 bg-accent/20 rounded-t relative" style={{ height: `${height}%` }}>
-                        <div className="absolute bottom-0 left-0 right-0 bg-accent rounded-t" style={{ height: `${height * 0.7}%` }} />
-                      </div>
-                    ))}
-                  </div>
-                  <div className="flex justify-between mt-2 text-xs text-muted-foreground">
-                    <span>Mon</span>
-                    <span>Tue</span>
-                    <span>Wed</span>
-                    <span>Thu</span>
-                    <span>Fri</span>
-                    <span>Sat</span>
-                    <span>Sun</span>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="font-semibold">Top Performing</h3>
-                    <Badge variant="secondary">By accuracy</Badge>
-                  </div>
-                  <div className="space-y-3">
-                    {[
-                      { name: "Sepsis AI Pro", accuracy: "94.2%" },
-                      { name: "ReadmitRisk", accuracy: "91.8%" },
-                      { name: "NoteGenius", accuracy: "89.5%" },
-                    ].map((item, i) => (
-                      <div key={i} className="flex items-center justify-between">
-                        <span className="text-sm">{item.name}</span>
-                        <span className="font-mono text-sm text-accent">{item.accuracy}</span>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+              );
+            })}
           </div>
-        )}
+        </div>
+      )}
 
-        {/* Marketplace View */}
-        {activeSection === "marketplace" && (
-          <div className="p-8">
-            <div className="mb-8">
-              <h1 className="text-2xl font-semibold mb-1">Marketplace</h1>
-              <p className="text-muted-foreground">Browse and install AI modules for your organization</p>
-            </div>
-
-            {/* Search */}
-            <div className="relative mb-6">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
-                placeholder="Search modules..."
-                className="pl-10 max-w-md"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-            </div>
-
-            {/* App Grid */}
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filteredApps.map((app, i) => {
-                const isInstalled = installedAppIds.includes(app.id);
-                return (
-                  <motion.div
-                    key={app.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.05 }}
-                  >
-                    <Card 
-                      className={`cursor-pointer transition-all hover:shadow-md ${
-                        isInstalled ? 'border-accent/50 bg-accent/5' : 'hover:border-foreground/20'
-                      }`}
-                      onClick={() => !isInstalled && setSelectedApp(app)}
-                    >
-                      <CardContent className="p-5">
-                        <div className="flex items-start justify-between mb-3">
-                          <div className="w-10 h-10 rounded-lg bg-foreground flex items-center justify-center">
-                            <Boxes className="w-5 h-5 text-background" />
-                          </div>
-                          {isInstalled ? (
-                            <Badge className="bg-accent text-white border-0">
-                              <Check className="w-3 h-3 mr-1" />
-                              Installed
-                            </Badge>
-                          ) : (
-                            <Badge variant="secondary">{app.price}</Badge>
-                          )}
-                        </div>
-                        
-                        <h3 className="font-semibold mb-1">{app.name}</h3>
-                        <p className="text-sm text-muted-foreground mb-2">{app.vendor}</p>
-                        <p className="text-sm text-muted-foreground mb-4 line-clamp-2">{app.description}</p>
-                        
-                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                          <div className="flex items-center gap-1">
-                            <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
-                            <span>{app.rating}</span>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <Download className="w-4 h-4" />
-                            <span>{app.installs}</span>
-                          </div>
-                          {app.certified && (
-                            <div className="flex items-center gap-1 ml-auto">
-                              <Shield className="w-4 h-4 text-accent" />
-                            </div>
-                          )}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </motion.div>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {/* Settings View */}
-        {activeSection === "settings" && (
-          <div className="p-8">
-            <div className="mb-8">
-              <h1 className="text-2xl font-semibold mb-1">Settings</h1>
-              <p className="text-muted-foreground">Manage your organization settings</p>
-            </div>
-            <Card>
-              <CardContent className="p-6">
-                <p className="text-muted-foreground">Settings panel coming soon...</p>
-              </CardContent>
-            </Card>
-          </div>
-        )}
-      </main>
+      {/* Settings View */}
+      {activeSection === "settings" && (
+        <Card className="border-0 shadow-sm">
+          <CardContent className="p-6">
+            <p className="text-muted-foreground">Settings panel coming soon...</p>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Install Modal */}
       <AnimatePresence>
@@ -503,8 +454,8 @@ export default function ITView() {
                 <>
                   <div className="p-6 border-b">
                     <div className="flex items-start gap-4">
-                      <div className="w-12 h-12 rounded-lg bg-foreground flex items-center justify-center">
-                        <Boxes className="w-6 h-6 text-background" />
+                      <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center">
+                        <Boxes className="w-6 h-6 text-foreground" />
                       </div>
                       <div className="flex-1">
                         <h2 className="text-xl font-semibold">{selectedApp.name}</h2>
@@ -596,8 +547,7 @@ export default function ITView() {
                     {["connecting", "authenticating", "installing", "complete"].map((step, i) => {
                       const steps: InstallState[] = ["connecting", "authenticating", "installing", "complete"];
                       const currentIndex = steps.indexOf(installState);
-                      const stepIndex = i;
-                      const isDone = stepIndex <= currentIndex;
+                      const isDone = i <= currentIndex;
                       
                       return (
                         <div 
