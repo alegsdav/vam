@@ -4,580 +4,395 @@ export const dynamic = 'force-dynamic';
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import Link from "next/link";
 import { 
   ArrowRight,
-  Activity,
-  Clock,
-  AlertTriangle,
-  TrendingUp,
+  AlertCircle,
   CheckCircle2,
-  XCircle,
-  Gauge,
+  Info,
+  CreditCard,
   Boxes,
   Building2,
-  Code2,
-  FileJson,
-  Rocket,
-  Info,
-  Loader2,
-  Package
+  Zap,
+  Store,
+  Plus,
+  Wrench,
+  CircleDot
 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { usePersona } from "./persona-context";
 import { createClient } from "@/lib/supabase/client";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import type { Profile } from "@/lib/supabase/types";
 
 // Type for modules from Supabase
 type Module = {
   id: string;
-  user_id: string;
   name: string;
-  description: string;
-  estimated_cost_year: number;
-  link: string;
   status: "pending" | "approved" | "rejected";
-  created_at: string;
-  updated_at: string;
 };
 
-// Mock data - same underlying numbers, different labels
-const mockData = {
-  volume: 5247,
-  speed: 1.2, // seconds
-  speedMs: 142, // milliseconds for technical
-  failures: 23,
-  failureRate: 0.4, // percentage
-  value: 847, // hours saved / dollars
-  scrubScore: 82,
+// Mock notifications (would come from a real notifications table)
+type Notification = {
+  id: string;
+  type: "critical" | "success" | "info" | "billing";
+  role: "it" | "startup" | "system" | "billing";
+  title: string;
+  description: string;
+  timestamp: string;
+  actionLabel?: string;
+  actionHref?: string;
 };
 
-// Pipeline status
-const pipelineStatus = {
-  source: { status: "healthy", label: "EHR Systems" },
-  processing: { status: "healthy", label: "Scrub AI" },
-  destination: { status: "healthy", label: "Applications" },
-};
-
-// Mock integrations (would come from a real integration table)
-const myIntegrations = [
-  { name: "Epic - Cardiology Unit", status: "connected", patients: "1,247", lastSync: "2 min ago" },
-  { name: "Epic - Emergency Dept", status: "connected", patients: "892", lastSync: "5 min ago" },
-  { name: "Cerner - Main Campus", status: "syncing", patients: "3,108", lastSync: "syncing..." },
-];
-
-// Mock logs (would come from a real logging service)
-const recentLogs = [
-  { timestamp: "2026-01-27T14:32:01Z", level: "info", message: "POST /v1/predict - 200 OK (142ms)", endpoint: "/v1/predict" },
-  { timestamp: "2026-01-27T14:31:58Z", level: "info", message: "POST /v1/predict - 200 OK (138ms)", endpoint: "/v1/predict" },
-  { timestamp: "2026-01-27T14:31:45Z", level: "warn", message: "POST /v1/predict - 429 Rate Limited", endpoint: "/v1/predict" },
-  { timestamp: "2026-01-27T14:31:22Z", level: "info", message: "GET /v1/models - 200 OK (45ms)", endpoint: "/v1/models" },
-  { timestamp: "2026-01-27T14:30:59Z", level: "error", message: "POST /v1/predict - 500 Internal Error", endpoint: "/v1/predict" },
+// Platform status
+const platformStatus = [
+  { name: "Scrub Core Systems", status: "operational" as const },
+  { name: "Redox/Metriport Gateway", status: "operational" as const },
+  { name: "Epic API Status", status: "degraded" as const },
 ];
 
 export default function PortalHomePage() {
-  const { persona, labels } = usePersona();
-  const [myApps, setMyApps] = useState<Module[]>([]);
-  const [loadingApps, setLoadingApps] = useState(true);
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [modules, setModules] = useState<Module[]>([]);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [loading, setLoading] = useState(true);
   
   const supabase = createClient();
 
-  // Fetch user's own modules
   useEffect(() => {
-    const fetchMyModules = async () => {
-      setLoadingApps(true);
+    const fetchData = async () => {
+      setLoading(true);
       
+      // Get user profile
       const { data: { user } } = await supabase.auth.getUser();
       
-      if (!user) {
-        setLoadingApps(false);
-        return;
+      if (user) {
+        // Fetch profile
+        const { data: profileData } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("id", user.id)
+          .single();
+        
+        if (profileData) {
+          setProfile(profileData as Profile);
+        }
+
+        // Fetch user's modules
+        const { data: modulesData } = await supabase
+          .from("modules")
+          .select("id, name, status")
+          .eq("user_id", user.id);
+        
+        if (modulesData) {
+          setModules(modulesData);
+        }
       }
 
-      const { data, error } = await supabase
-        .from("modules")
-        .select("*")
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false });
-
-      if (error) {
-        console.error("Error fetching modules:", error);
-      } else {
-        setMyApps(data || []);
-      }
+      // Mock notifications (in production, fetch from notifications table)
+      setNotifications([
+        {
+          id: "1",
+          type: "critical",
+          role: "it",
+          title: "Mercy Hospital VPN connection lost",
+          description: "Heartbeat lost 5 minutes ago. Integration may be affected.",
+          timestamp: "5 min ago",
+          actionLabel: "Fix Connection",
+          actionHref: "/portal/it"
+        },
+        {
+          id: "2",
+          type: "success",
+          role: "startup",
+          title: "Module installed at Cleveland Clinic",
+          description: "Your 'Sepsis-Pro' module was just installed by Cleveland Clinic.",
+          timestamp: "2 hours ago"
+        },
+        {
+          id: "3",
+          type: "info",
+          role: "system",
+          title: "Scrub Platform Update v2.1",
+          description: "Maintenance scheduled for Saturday 2am-4am EST.",
+          timestamp: "1 day ago"
+        },
+        {
+          id: "4",
+          type: "billing",
+          role: "billing",
+          title: "API credits running low",
+          description: "Your API usage credits are at 80%. Consider upgrading.",
+          timestamp: "2 days ago",
+          actionLabel: "View Usage",
+          actionHref: "/portal/billing"
+        },
+      ]);
       
-      setLoadingApps(false);
+      setLoading(false);
     };
 
-    fetchMyModules();
+    fetchData();
   }, [supabase]);
 
-  // Format values based on persona
-  const getVolumeDisplay = () => {
-    return mockData.volume.toLocaleString();
+  // Get time-based greeting
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return "Good Morning";
+    if (hour < 18) return "Good Afternoon";
+    return "Good Evening";
   };
 
-  const getSpeedDisplay = () => {
-    if (persona === "clinical") return `${mockData.speed}s`;
-    return `${mockData.speedMs}ms`;
-  };
-
-  const getFailuresDisplay = () => {
-    if (persona === "business") return `${mockData.failureRate}%`;
-    return mockData.failures.toString();
-  };
-
-  const getValueDisplay = () => {
-    if (persona === "clinical") return `${mockData.value}`;
-    return `$${mockData.value.toLocaleString()}`;
-  };
-
-  // Get status badge styling
-  const getStatusBadge = (status: Module["status"]) => {
-    switch (status) {
-      case "approved":
-        return { className: "bg-accent/10 text-accent border-0", label: "Active" };
-      case "pending":
-        return { className: "bg-amber-100 text-amber-700 border-0", label: "Pending Review" };
-      case "rejected":
-        return { className: "bg-red-100 text-red-700 border-0", label: "Rejected" };
+  // Get notification icon and color
+  const getNotificationStyle = (type: Notification["type"]) => {
+    switch (type) {
+      case "critical":
+        return { icon: AlertCircle, color: "text-red-500", bg: "bg-red-50", border: "border-red-100" };
+      case "success":
+        return { icon: CheckCircle2, color: "text-accent", bg: "bg-accent/5", border: "border-accent/10" };
+      case "info":
+        return { icon: Info, color: "text-blue-500", bg: "bg-blue-50", border: "border-blue-100" };
+      case "billing":
+        return { icon: CreditCard, color: "text-amber-500", bg: "bg-amber-50", border: "border-amber-100" };
     }
   };
 
-  // Format price
-  const formatPrice = (costPerYear: number) => {
-    if (costPerYear === 0) return "Free";
-    return `$${(costPerYear / 12).toFixed(0)}/mo`;
+  // Calculate stats
+  const activeModules = modules.filter(m => m.status === "approved").length;
+  const criticalAlerts = notifications.filter(n => n.type === "critical").length;
+  const totalUpdates = notifications.length;
+
+  // Determine dynamic action button
+  const getDynamicAction = () => {
+    const critical = notifications.find(n => n.type === "critical");
+    if (critical && critical.actionHref) {
+      return { label: critical.actionLabel || "Fix Issue", href: critical.actionHref, icon: Wrench };
+    }
+    if (modules.length === 0) {
+      return { label: "Create New Project", href: "/portal/startup", icon: Plus };
+    }
+    return { label: "Browse Marketplace", href: "/portal/marketplace", icon: Store };
   };
 
+  const dynamicAction = getDynamicAction();
+
+  // Platform status indicator
+  const getStatusIndicator = (status: "operational" | "degraded" | "down") => {
+    switch (status) {
+      case "operational":
+        return { color: "bg-accent", label: "Operational" };
+      case "degraded":
+        return { color: "bg-amber-500", label: "Degraded" };
+      case "down":
+        return { color: "bg-red-500", label: "Down" };
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <div className="w-8 h-8 border-2 border-foreground border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
   return (
-    <TooltipProvider>
-      <div className="space-y-6">
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-        >
-          <h1 className="text-3xl font-bold mb-1">Scrub Dashboard</h1>
+    <div className="space-y-8 max-w-4xl">
+      {/* Section A: Concierge Header */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="space-y-4"
+      >
+        <div>
+          <h1 className="text-3xl font-bold mb-2">
+            {getGreeting()}, {profile?.name || profile?.username || "there"}.
+          </h1>
           <p className="text-muted-foreground">
-            Unified view of your healthcare AI pipeline
+            You have{" "}
+            {criticalAlerts > 0 ? (
+              <span className="text-red-500 font-medium">{criticalAlerts} critical alert{criticalAlerts !== 1 ? "s" : ""}</span>
+            ) : (
+              <span className="text-accent font-medium">no critical alerts</span>
+            )}
+            {" "}and{" "}
+            <span className="font-medium">{totalUpdates} update{totalUpdates !== 1 ? "s" : ""}</span> today.
           </p>
-        </motion.div>
+        </div>
+        
+        {/* Dynamic Action Button */}
+        <Link href={dynamicAction.href}>
+          <Button className="bg-foreground hover:bg-foreground/90 text-background">
+            <dynamicAction.icon className="w-4 h-4 mr-2" />
+            {dynamicAction.label}
+            <ArrowRight className="w-4 h-4 ml-2" />
+          </Button>
+        </Link>
+      </motion.div>
 
-        {/* Top Row: Pipeline Health - The Heartbeat */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-        >
-          <Card className="border-0 shadow-sm">
-            <CardHeader className="pb-2">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-base font-semibold">Pipeline Health</CardTitle>
-                <Badge variant="secondary" className="bg-accent/10 text-accent">
-                  <CheckCircle2 className="w-3 h-3 mr-1" />
-                  All Systems Operational
-                </Badge>
+      {/* Section C: Ecosystem Snapshot */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+        className="grid grid-cols-3 gap-4"
+      >
+        {/* My AI Modules */}
+        <Link href="/portal/startup">
+          <Card className="border-0 shadow-sm hover:shadow-md transition-shadow cursor-pointer group">
+            <CardContent className="p-5">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center group-hover:bg-accent/20 transition-colors">
+                  <Boxes className="w-5 h-5 text-accent" />
+                </div>
               </div>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center justify-between py-4">
-                {/* Source */}
-                <div className="flex-1 text-center">
-                  <div className={`w-16 h-16 rounded-2xl mx-auto mb-2 flex items-center justify-center ${
-                    pipelineStatus.source.status === "healthy" ? "bg-accent/10" : "bg-red-100"
-                  }`}>
-                    <Building2 className={`w-8 h-8 ${
-                      pipelineStatus.source.status === "healthy" ? "text-accent" : "text-red-500"
-                    }`} />
-                  </div>
-                  <p className="font-medium text-sm">Source</p>
-                  <p className="text-xs text-muted-foreground">{pipelineStatus.source.label}</p>
-                </div>
+              <p className="text-sm text-muted-foreground mb-1">My AI Modules</p>
+              <p className="text-2xl font-bold">
+                {activeModules} <span className="text-base font-normal text-muted-foreground">Active</span>
+              </p>
+            </CardContent>
+          </Card>
+        </Link>
 
-                {/* Arrow */}
-                <div className="flex-1 flex items-center justify-center">
-                  <div className="h-1 flex-1 bg-accent/20 rounded-full relative overflow-hidden max-w-[100px]">
-                    <motion.div 
-                      className="absolute inset-y-0 left-0 bg-accent rounded-full"
-                      initial={{ width: "0%" }}
-                      animate={{ width: "100%" }}
-                      transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
-                      style={{ width: "30%" }}
-                    />
-                  </div>
-                  <ArrowRight className="w-5 h-5 text-accent mx-2" />
+        {/* Active Integrations */}
+        <Link href="/portal/it">
+          <Card className="border-0 shadow-sm hover:shadow-md transition-shadow cursor-pointer group">
+            <CardContent className="p-5">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center group-hover:bg-blue-100 transition-colors">
+                  <Building2 className="w-5 h-5 text-blue-500" />
                 </div>
+              </div>
+              <p className="text-sm text-muted-foreground mb-1">Active Integrations</p>
+              <p className="text-2xl font-bold">
+                12 <span className="text-base font-normal text-muted-foreground">Hospitals</span>
+              </p>
+            </CardContent>
+          </Card>
+        </Link>
 
-                {/* Processing */}
-                <div className="flex-1 text-center">
-                  <div className={`w-16 h-16 rounded-2xl mx-auto mb-2 flex items-center justify-center ${
-                    pipelineStatus.processing.status === "healthy" ? "bg-accent/10" : "bg-red-100"
-                  }`}>
-                    <Activity className={`w-8 h-8 ${
-                      pipelineStatus.processing.status === "healthy" ? "text-accent" : "text-red-500"
-                    }`} />
-                  </div>
-                  <p className="font-medium text-sm">Processing</p>
-                  <p className="text-xs text-muted-foreground">{pipelineStatus.processing.label}</p>
+        {/* Monthly Usage */}
+        <Link href="/portal/billing">
+          <Card className="border-0 shadow-sm hover:shadow-md transition-shadow cursor-pointer group">
+            <CardContent className="p-5">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center group-hover:bg-amber-100 transition-colors">
+                  <Zap className="w-5 h-5 text-amber-500" />
                 </div>
-
-                {/* Arrow */}
-                <div className="flex-1 flex items-center justify-center">
-                  <div className="h-1 flex-1 bg-accent/20 rounded-full relative overflow-hidden max-w-[100px]">
-                    <motion.div 
-                      className="absolute inset-y-0 left-0 bg-accent rounded-full"
-                      initial={{ width: "0%" }}
-                      animate={{ width: "100%" }}
-                      transition={{ duration: 1.5, repeat: Infinity, ease: "linear", delay: 0.5 }}
-                      style={{ width: "30%" }}
-                    />
-                  </div>
-                  <ArrowRight className="w-5 h-5 text-accent mx-2" />
-                </div>
-
-                {/* Destination */}
-                <div className="flex-1 text-center">
-                  <div className={`w-16 h-16 rounded-2xl mx-auto mb-2 flex items-center justify-center ${
-                    pipelineStatus.destination.status === "healthy" ? "bg-accent/10" : "bg-red-100"
-                  }`}>
-                    <Boxes className={`w-8 h-8 ${
-                      pipelineStatus.destination.status === "healthy" ? "text-accent" : "text-red-500"
-                    }`} />
-                  </div>
-                  <p className="font-medium text-sm">Destination</p>
-                  <p className="text-xs text-muted-foreground">{pipelineStatus.destination.label}</p>
-                </div>
+              </div>
+              <p className="text-sm text-muted-foreground mb-1">Monthly Scrubs</p>
+              <p className="text-2xl font-bold">
+                14.2k <span className="text-base font-normal text-muted-foreground">/ 20k</span>
+              </p>
+              {/* Usage bar */}
+              <div className="mt-2 h-1.5 bg-muted rounded-full overflow-hidden">
+                <div className="h-full bg-amber-500 rounded-full" style={{ width: "71%" }} />
               </div>
             </CardContent>
           </Card>
-        </motion.div>
+        </Link>
+      </motion.div>
 
-        {/* Middle Row: Impact Cards - Universal Metrics */}
-        <motion.div 
-          className="grid grid-cols-5 gap-4"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-        >
-          {/* Scrub Score - The Credit Score */}
-          <Card className="border-0 shadow-sm col-span-1">
-            <CardContent className="p-5">
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <div className="cursor-help">
-                    <div className="flex items-center justify-between mb-3">
-                      <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Scrub Score</span>
-                      <Info className="w-3.5 h-3.5 text-muted-foreground" />
-                    </div>
-                    <div className="relative">
-                      <div className="w-20 h-20 mx-auto">
-                        <svg className="w-20 h-20 transform -rotate-90">
-                          <circle
-                            cx="40"
-                            cy="40"
-                            r="36"
-                            stroke="currentColor"
-                            strokeWidth="8"
-                            fill="none"
-                            className="text-muted/30"
-                          />
-                          <circle
-                            cx="40"
-                            cy="40"
-                            r="36"
-                            stroke="currentColor"
-                            strokeWidth="8"
-                            fill="none"
-                            strokeDasharray={`${(mockData.scrubScore / 100) * 226} 226`}
-                            className="text-accent"
-                            strokeLinecap="round"
-                          />
-                        </svg>
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <span className="text-2xl font-bold">{mockData.scrubScore}</span>
-                        </div>
+      {/* Section B: Unified Notification Feed */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+      >
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="font-semibold text-lg">Recent Activity</h2>
+          <Link href="/portal/inbox" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+            View all
+          </Link>
+        </div>
+        
+        <div className="space-y-3">
+          {notifications.map((notification, i) => {
+            const style = getNotificationStyle(notification.type);
+            return (
+              <motion.div
+                key={notification.id}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.3 + i * 0.05 }}
+              >
+                <Card className={`border ${style.border} ${style.bg} shadow-none`}>
+                  <CardContent className="p-4">
+                    <div className="flex items-start gap-3">
+                      <div className={`w-8 h-8 rounded-lg ${style.bg} flex items-center justify-center flex-shrink-0`}>
+                        <style.icon className={`w-4 h-4 ${style.color}`} />
                       </div>
-                    </div>
-                    <p className="text-xs text-center text-muted-foreground mt-2">Data Quality</p>
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent side="bottom" className="max-w-[200px]">
-                  <p className="text-xs">
-                    {persona === "clinical" && "Your data completeness score. Missing patient weights in Cardiology."}
-                    {persona === "business" && "Data quality affects model accuracy and revenue. Score > 80 is good."}
-                    {persona === "technical" && "FHIR compliance score. Consider normalizing units (lbs→kg)."}
-                  </p>
-                </TooltipContent>
-              </Tooltip>
-            </CardContent>
-          </Card>
-
-          {/* Volume / Throughput */}
-          <Card className="border-0 shadow-sm">
-            <CardContent className="p-5">
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <div className="cursor-help">
-                    <div className="flex items-center justify-between mb-3">
-                      <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Throughput</span>
-                      <Info className="w-3.5 h-3.5 text-muted-foreground" />
-                    </div>
-                    <p className="text-3xl font-bold">{getVolumeDisplay()}</p>
-                    <p className="text-sm text-muted-foreground">{labels.volume}</p>
-                    <div className="flex items-center gap-1 mt-2">
-                      <TrendingUp className="w-3 h-3 text-accent" />
-                      <span className="text-xs text-accent">+12% from last week</span>
-                    </div>
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent side="bottom" className="max-w-[200px]">
-                  <p className="text-xs font-medium mb-1">Also known as:</p>
-                  <ul className="text-xs text-muted-foreground space-y-0.5">
-                    <li>• Clinical: Patients Analyzed</li>
-                    <li>• Business: Inference Count</li>
-                    <li>• Technical: Total Requests</li>
-                  </ul>
-                </TooltipContent>
-              </Tooltip>
-            </CardContent>
-          </Card>
-
-          {/* Speed / Responsiveness */}
-          <Card className="border-0 shadow-sm">
-            <CardContent className="p-5">
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <div className="cursor-help">
-                    <div className="flex items-center justify-between mb-3">
-                      <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Speed</span>
-                      <Info className="w-3.5 h-3.5 text-muted-foreground" />
-                    </div>
-                    <p className="text-3xl font-bold">{getSpeedDisplay()}</p>
-                    <p className="text-sm text-muted-foreground">{labels.speed}</p>
-                    <div className="flex items-center gap-1 mt-2">
-                      <TrendingUp className="w-3 h-3 text-accent" />
-                      <span className="text-xs text-accent">-18ms improvement</span>
-                    </div>
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent side="bottom" className="max-w-[200px]">
-                  <p className="text-xs font-medium mb-1">Also known as:</p>
-                  <ul className="text-xs text-muted-foreground space-y-0.5">
-                    <li>• Clinical: Time to Result</li>
-                    <li>• Business: Model Latency</li>
-                    <li>• Technical: P99 Latency</li>
-                  </ul>
-                </TooltipContent>
-              </Tooltip>
-            </CardContent>
-          </Card>
-
-          {/* Failures / Friction */}
-          <Card className="border-0 shadow-sm">
-            <CardContent className="p-5">
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <div className="cursor-help">
-                    <div className="flex items-center justify-between mb-3">
-                      <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Friction</span>
-                      <Info className="w-3.5 h-3.5 text-muted-foreground" />
-                    </div>
-                    <p className="text-3xl font-bold">{getFailuresDisplay()}</p>
-                    <p className="text-sm text-muted-foreground">{labels.failures}</p>
-                    <div className="flex items-center gap-1 mt-2">
-                      <AlertTriangle className="w-3 h-3 text-amber-500" />
-                      <span className="text-xs text-amber-500">+3 from yesterday</span>
-                    </div>
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent side="bottom" className="max-w-[200px]">
-                  <p className="text-xs font-medium mb-1">Also known as:</p>
-                  <ul className="text-xs text-muted-foreground space-y-0.5">
-                    <li>• Clinical: Failed Screenings</li>
-                    <li>• Business: Error Rate %</li>
-                    <li>• Technical: 4xx/5xx Responses</li>
-                  </ul>
-                </TooltipContent>
-              </Tooltip>
-            </CardContent>
-          </Card>
-
-          {/* Value / Impact */}
-          <Card className="border-0 shadow-sm">
-            <CardContent className="p-5">
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <div className="cursor-help">
-                    <div className="flex items-center justify-between mb-3">
-                      <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Impact</span>
-                      <Info className="w-3.5 h-3.5 text-muted-foreground" />
-                    </div>
-                    <p className="text-3xl font-bold">{getValueDisplay()}</p>
-                    <p className="text-sm text-muted-foreground">{labels.value}</p>
-                    <div className="flex items-center gap-1 mt-2">
-                      <TrendingUp className="w-3 h-3 text-accent" />
-                      <span className="text-xs text-accent">+8% this month</span>
-                    </div>
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent side="bottom" className="max-w-[200px]">
-                  <p className="text-xs font-medium mb-1">Also known as:</p>
-                  <ul className="text-xs text-muted-foreground space-y-0.5">
-                    <li>• Clinical: Hours Saved</li>
-                    <li>• Business: Revenue Generated</li>
-                    <li>• Technical: Compute Cost</li>
-                  </ul>
-                </TooltipContent>
-              </Tooltip>
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        {/* Bottom Row: Context Tabs - Role-specific Details */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-        >
-          <Card className="border-0 shadow-sm">
-            <CardContent className="p-6">
-              <Tabs defaultValue="apps" className="w-full">
-                <TabsList className="bg-muted/50 mb-4">
-                  <TabsTrigger value="apps" className="flex items-center gap-2">
-                    <Rocket className="w-4 h-4" />
-                    My Apps
-                    {myApps.length > 0 && (
-                      <Badge variant="secondary" className="ml-1 text-xs">
-                        {myApps.length}
-                      </Badge>
-                    )}
-                  </TabsTrigger>
-                  <TabsTrigger value="integrations" className="flex items-center gap-2">
-                    <Building2 className="w-4 h-4" />
-                    My Integrations
-                  </TabsTrigger>
-                  <TabsTrigger value="logs" className="flex items-center gap-2">
-                    <Code2 className="w-4 h-4" />
-                    Logs
-                  </TabsTrigger>
-                </TabsList>
-
-                {/* My Apps Tab (Startup View) - Now fetches from Supabase */}
-                <TabsContent value="apps">
-                  {loadingApps ? (
-                    <div className="flex items-center justify-center py-8">
-                      <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-                    </div>
-                  ) : myApps.length === 0 ? (
-                    <div className="text-center py-8">
-                      <Package className="w-10 h-10 mx-auto text-muted-foreground/50 mb-3" />
-                      <h3 className="font-medium mb-1">No apps submitted</h3>
-                      <p className="text-sm text-muted-foreground">
-                        Submit your first AI module from the AI Startup portal.
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="space-y-3">
-                      {myApps.map((app) => {
-                        const statusBadge = getStatusBadge(app.status);
-                        return (
-                          <div key={app.id} className="flex items-center justify-between p-4 bg-muted/30 rounded-xl hover:bg-muted/50 transition-colors">
-                            <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 rounded-lg bg-foreground/10 flex items-center justify-center">
-                                <Boxes className="w-5 h-5" />
-                              </div>
-                              <div>
-                                <p className="font-medium">{app.name}</p>
-                                <p className="text-xs text-muted-foreground line-clamp-1">{app.description}</p>
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-4">
-                              <div className="text-right">
-                                <p className="font-medium text-accent">{formatPrice(app.estimated_cost_year)}</p>
-                                <p className="text-xs text-muted-foreground">est. revenue</p>
-                              </div>
-                              <Badge variant="secondary" className={statusBadge.className}>
-                                {statusBadge.label}
-                              </Badge>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </TabsContent>
-
-                {/* My Integrations Tab (Hospital View) */}
-                <TabsContent value="integrations">
-                  <div className="space-y-3">
-                    {myIntegrations.map((integration, i) => (
-                      <div key={i} className="flex items-center justify-between p-4 bg-muted/30 rounded-xl hover:bg-muted/50 transition-colors">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-lg bg-foreground/10 flex items-center justify-center">
-                            <Building2 className="w-5 h-5" />
-                          </div>
-                          <div>
-                            <p className="font-medium">{integration.name}</p>
-                            <p className="text-xs text-muted-foreground">{integration.patients} patients</p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-4">
-                          <div className="text-right">
-                            <p className="text-sm text-muted-foreground">{integration.lastSync}</p>
-                          </div>
-                          <Badge variant={integration.status === "connected" ? "default" : "secondary"}
-                            className={integration.status === "connected" ? "bg-accent/10 text-accent border-0" : "bg-blue-100 text-blue-600 border-0"}>
-                            {integration.status === "syncing" && (
-                              <span className="w-2 h-2 bg-blue-500 rounded-full animate-pulse mr-1.5" />
-                            )}
-                            {integration.status}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <p className="font-medium text-sm">{notification.title}</p>
+                          <Badge variant="secondary" className="text-[10px] px-1.5 py-0 bg-background/50">
+                            {notification.role === "it" && "IT"}
+                            {notification.role === "startup" && "Startup"}
+                            {notification.role === "system" && "System"}
+                            {notification.role === "billing" && "Billing"}
                           </Badge>
                         </div>
+                        <p className="text-sm text-muted-foreground">{notification.description}</p>
+                        <div className="flex items-center justify-between mt-2">
+                          <span className="text-xs text-muted-foreground">{notification.timestamp}</span>
+                          {notification.actionHref && (
+                            <Link href={notification.actionHref}>
+                              <Button variant="ghost" size="sm" className="h-7 text-xs">
+                                {notification.actionLabel}
+                                <ArrowRight className="w-3 h-3 ml-1" />
+                              </Button>
+                            </Link>
+                          )}
+                        </div>
                       </div>
-                    ))}
-                  </div>
-                </TabsContent>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            );
+          })}
+        </div>
+      </motion.div>
 
-                {/* Logs Tab (Dev View) */}
-                <TabsContent value="logs">
-                  <div className="bg-foreground text-background rounded-xl overflow-hidden">
-                    <div className="p-3 border-b border-white/10 flex items-center justify-between">
-                      <span className="text-xs text-background/50 font-mono">Recent API Logs</span>
-                      <Badge variant="secondary" className="bg-white/10 text-background/70 border-0 text-xs">
-                        Live
+      {/* Section D: Platform Health Pulse */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4 }}
+      >
+        <Card className="border-0 shadow-sm bg-muted/30">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium text-muted-foreground">Platform Status</span>
+              <div className="flex items-center gap-6">
+                {platformStatus.map((system) => {
+                  const indicator = getStatusIndicator(system.status);
+                  return (
+                    <div key={system.name} className="flex items-center gap-2">
+                      <CircleDot className={`w-3 h-3 ${
+                        system.status === "operational" ? "text-accent" :
+                        system.status === "degraded" ? "text-amber-500" :
+                        "text-red-500"
+                      }`} />
+                      <span className="text-sm">{system.name}</span>
+                      <Badge 
+                        variant="secondary" 
+                        className={`text-[10px] px-1.5 py-0 ${
+                          system.status === "operational" ? "bg-accent/10 text-accent" :
+                          system.status === "degraded" ? "bg-amber-100 text-amber-600" :
+                          "bg-red-100 text-red-600"
+                        }`}
+                      >
+                        {indicator.label}
                       </Badge>
                     </div>
-                    <div className="p-4 font-mono text-xs space-y-2 max-h-[300px] overflow-y-auto">
-                      {recentLogs.map((log, i) => (
-                        <div key={i} className="flex items-start gap-3">
-                          <span className="text-background/40 w-[180px] flex-shrink-0">
-                            {new Date(log.timestamp).toLocaleTimeString()}
-                          </span>
-                          <span className={`w-12 flex-shrink-0 ${
-                            log.level === "error" ? "text-red-400" :
-                            log.level === "warn" ? "text-amber-400" :
-                            "text-accent"
-                          }`}>
-                            [{log.level.toUpperCase()}]
-                          </span>
-                          <span className="text-background/80">{log.message}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </TabsContent>
-              </Tabs>
-            </CardContent>
-          </Card>
-        </motion.div>
-      </div>
-    </TooltipProvider>
+                  );
+                })}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
+    </div>
   );
 }

@@ -4,86 +4,74 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { 
-  Building2, 
-  Rocket, 
-  Code2, 
   Home,
-  LogOut, 
+  Inbox,
+  CreditCard,
+  Boxes,
+  Key,
+  FlaskConical,
+  Building2,
+  Shield,
+  FileText,
+  Store,
   Settings,
-  HelpCircle,
-  Crown,
-  Stethoscope,
-  DollarSign,
-  Terminal
+  LogOut, 
+  HelpCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { createClient } from "@/lib/supabase/client";
 import type { Profile } from "@/lib/supabase/types";
-import { PersonaProvider, usePersona, Persona } from "./persona-context";
+import type { LucideIcon } from "lucide-react";
 
-const navigation = [
+// Sidebar item type
+type SidebarItem = {
+  id: string;
+  title: string;
+  icon: LucideIcon;
+  href: string;
+  badge?: number;
+  external?: boolean;
+};
+
+type SidebarSection = {
+  label?: string;
+  items: SidebarItem[];
+};
+
+// Sidebar navigation structure
+const sidebarSections: SidebarSection[] = [
   {
-    id: "home",
-    title: "Home",
-    icon: Home,
-    href: "/portal",
+    items: [
+      { id: "home", title: "Home", icon: Home, href: "/portal" },
+      { id: "inbox", title: "Inbox", icon: Inbox, href: "/portal/inbox", badge: 3 },
+      { id: "billing", title: "Billing & Credits", icon: CreditCard, href: "/portal/billing" },
+    ]
   },
   {
-    id: "it",
-    title: "IT Admin",
-    subtitle: "Manage AI Modules",
-    icon: Building2,
-    href: "/portal/it",
-    roleKey: "is_it",
+    label: "Projects",
+    items: [
+      { id: "modules", title: "My AI Modules", icon: Boxes, href: "/portal/startup" },
+      { id: "api-keys", title: "API Keys", icon: Key, href: "/portal/developer" },
+      { id: "sandbox", title: "Sandbox", icon: FlaskConical, href: "/portal/sandbox" },
+    ]
   },
   {
-    id: "startup",
-    title: "AI Startup",
-    subtitle: "Submit Modules",
-    icon: Rocket,
-    href: "/portal/startup",
-    roleKey: "is_startup",
+    label: "Integrations",
+    items: [
+      { id: "units", title: "Connected Units", icon: Building2, href: "/portal/it" },
+      { id: "security", title: "Security / VPN", icon: Shield, href: "/portal/security" },
+      { id: "logs", title: "Access Logs", icon: FileText, href: "/portal/logs" },
+    ]
   },
   {
-    id: "developer",
-    title: "Developer",
-    subtitle: "SDK & Docs",
-    icon: Code2,
-    href: "/portal/developer",
-    roleKey: "is_developer",
+    items: [
+      { id: "marketplace", title: "Marketplace", icon: Store, href: "/portal/marketplace" },
+      { id: "settings", title: "Settings", icon: Settings, href: "/portal/settings" },
+      { id: "admin", title: "Admin Panel", icon: Shield, href: "/admin", external: true },
+    ]
   }
 ];
-
-// Persona Toggle Component
-function PersonaToggle() {
-  const { persona, setPersona } = usePersona();
-  
-  const personas: { id: Persona; label: string; icon: typeof Stethoscope }[] = [
-    { id: "clinical", label: "Clinical", icon: Stethoscope },
-    { id: "business", label: "Business", icon: DollarSign },
-    { id: "technical", label: "Technical", icon: Terminal },
-  ];
-
-  return (
-    <div className="flex items-center bg-muted rounded-lg p-1">
-      {personas.map((p) => (
-        <button
-          key={p.id}
-          onClick={() => setPersona(p.id)}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
-            persona === p.id
-              ? "bg-background text-foreground shadow-sm"
-              : "text-muted-foreground hover:text-foreground"
-          }`}
-        >
-          <p.icon className="w-3.5 h-3.5" />
-          {p.label}
-        </button>
-      ))}
-    </div>
-  );
-}
 
 function PortalLayoutInner({
   children,
@@ -112,68 +100,74 @@ function PortalLayoutInner({
 
         {/* Navigation */}
         <nav className="flex-1 p-4 overflow-y-auto">
-          <div className="space-y-1">
-            {navigation.map((item) => {
-              const isActive = pathname === item.href || 
-                (item.href !== "/portal" && pathname?.startsWith(item.href));
-              const hasAccess = !item.roleKey || (profile && profile[item.roleKey as keyof Profile]);
+          {sidebarSections.map((section, sectionIndex) => (
+            <div key={sectionIndex}>
+              {/* Section Label */}
+              {section.label && (
+                <div className="px-3 py-2 mt-4 first:mt-0">
+                  <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                    {section.label}
+                  </span>
+                </div>
+              )}
               
-              return (
-                <Link
-                  key={item.id}
-                  href={item.href}
-                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all group ${
-                    isActive 
-                      ? "bg-foreground text-background" 
-                      : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                  }`}
-                >
-                  <item.icon className={`w-5 h-5 ${isActive ? '' : 'group-hover:text-foreground'}`} />
-                  <div className="flex-1">
-                    <span className="font-medium">{item.title}</span>
-                    {item.subtitle && (
-                      <p className={`text-xs ${isActive ? 'text-background/70' : 'text-muted-foreground'}`}>
-                        {item.subtitle}
-                      </p>
-                    )}
-                  </div>
-                  {!hasAccess && item.roleKey && (
-                    <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
-                      Pro
-                    </Badge>
-                  )}
-                </Link>
-              );
-            })}
-          </div>
-
-          {/* Settings link */}
-          <div className="mt-6 pt-6 border-t">
-            <Link
-              href="/admin"
-              className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-muted-foreground hover:bg-muted hover:text-foreground transition-all"
-            >
-              <Settings className="w-5 h-5" />
-              <span className="font-medium">Admin Panel</span>
-            </Link>
-          </div>
-        </nav>
-
-        {/* Upgrade Card */}
-        <div className="p-4">
-          <div className="bg-gradient-to-br from-accent/10 to-accent/5 border border-accent/20 rounded-2xl p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <Crown className="w-5 h-5 text-accent" />
-              <span className="font-semibold text-sm">Upgrade to Pro</span>
+              {/* Divider before non-labeled sections (except first) */}
+              {!section.label && sectionIndex > 0 && (
+                <div className="my-4 border-t" />
+              )}
+              
+              {/* Section Items */}
+              <div className="space-y-1">
+                {section.items.map((item) => {
+                  const isActive = pathname === item.href || 
+                    (item.href !== "/portal" && pathname?.startsWith(item.href));
+                  
+                  const linkContent = (
+                    <>
+                      <item.icon className={`w-5 h-5 ${isActive ? '' : 'group-hover:text-foreground'}`} />
+                      <span className="font-medium flex-1">{item.title}</span>
+                      {item.badge && (
+                        <Badge variant="secondary" className="bg-accent/10 text-accent border-0 text-xs px-1.5">
+                          {item.badge}
+                        </Badge>
+                      )}
+                    </>
+                  );
+                  
+                  if (item.external) {
+                    return (
+                      <Link
+                        key={item.id}
+                        href={item.href}
+                        className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all group ${
+                          isActive 
+                            ? "bg-foreground text-background" 
+                            : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                        }`}
+                      >
+                        {linkContent}
+                      </Link>
+                    );
+                  }
+                  
+                  return (
+                    <Link
+                      key={item.id}
+                      href={item.href}
+                      className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all group ${
+                        isActive 
+                          ? "bg-foreground text-background" 
+                          : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                      }`}
+                    >
+                      {linkContent}
+                    </Link>
+                  );
+                })}
+              </div>
             </div>
-            <p className="text-xs text-muted-foreground mb-3">
-              Get access to all features and unlock premium modules.
-            </p>
-            <Button size="sm" className="w-full bg-accent hover:bg-accent/90 text-white">
-              Upgrade
-            </Button>
-          </div>
-        </div>
+          ))}
+        </nav>
 
         {/* Bottom Links */}
         <div className="p-4 border-t space-y-1">
@@ -193,15 +187,8 @@ function PortalLayoutInner({
 
       {/* Main Content Area */}
       <div className="flex-1 ml-64">
-        {/* Top bar with persona toggle and user info */}
-        <header className="h-16 bg-background border-b flex items-center justify-between px-8 sticky top-0 z-10">
-          {/* Left: View Mode Label */}
-          <div className="flex items-center gap-3">
-            <span className="text-sm text-muted-foreground">View Mode:</span>
-            <PersonaToggle />
-          </div>
-          
-          {/* Right: User Info */}
+        {/* Minimal Top bar */}
+        <header className="h-16 bg-background border-b flex items-center justify-end px-8 sticky top-0 z-10">
           <div className="flex items-center gap-3">
             <div className="text-right">
               <p className="text-sm font-medium">{profile?.name || profile?.username}</p>
@@ -278,10 +265,8 @@ export default function PortalLayout({
   }
 
   return (
-    <PersonaProvider>
-      <PortalLayoutInner profile={profile} handleSignOut={handleSignOut}>
-        {children}
-      </PortalLayoutInner>
-    </PersonaProvider>
+    <PortalLayoutInner profile={profile} handleSignOut={handleSignOut}>
+      {children}
+    </PortalLayoutInner>
   );
 }
