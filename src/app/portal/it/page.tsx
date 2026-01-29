@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   LayoutDashboard,
@@ -20,115 +20,43 @@ import {
   X,
   Zap,
   TrendingUp,
-  TrendingDown
+  TrendingDown,
+  ExternalLink,
+  Package
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { createClient } from "@/lib/supabase/client";
 
-// Mock metrics
+// Type for modules from Supabase
+type Module = {
+  id: string;
+  user_id: string;
+  name: string;
+  description: string;
+  estimated_cost_year: number;
+  link: string;
+  status: "pending" | "approved" | "rejected";
+  created_at: string;
+  updated_at: string;
+  profiles?: {
+    name: string | null;
+    username: string | null;
+  };
+};
+
+// Mock metrics (these would also come from analytics in production)
 const metrics = {
   totalApiCalls: "1.24M",
   apiCallsChange: "+18%",
-  activeModules: 6,
+  activeModules: 0, // Will be updated from real data
   avgLatency: "142ms",
   latencyChange: "-12ms",
-  monthlySpend: "$2,847",
-  spendChange: "+$340"
+  monthlySpend: "$0",
+  spendChange: "$0"
 };
-
-// Installed modules
-const installedModules = [
-  { id: "sepsis-ai", name: "Sepsis AI Pro", vendor: "CriticalCare AI", calls: "423K", latency: "89ms", status: "active" },
-  { id: "note-genius", name: "NoteGenius", vendor: "DocAI Labs", calls: "312K", latency: "156ms", status: "active" },
-  { id: "readmit-risk", name: "ReadmitRisk", vendor: "Predictive Health", calls: "198K", latency: "124ms", status: "active" },
-  { id: "billing", name: "Billing Optimizer", vendor: "RevCycle AI", calls: "156K", latency: "201ms", status: "active" },
-  { id: "auth-flow", name: "AuthFlow", vendor: "ClearPath Health", calls: "89K", latency: "178ms", status: "active" },
-  { id: "rad-insight", name: "RadInsight", vendor: "Imaging Intelligence", calls: "67K", latency: "312ms", status: "active" },
-];
-
-// AI Apps for marketplace
-const marketplaceApps = [
-  {
-    id: "sepsis-ai",
-    name: "Sepsis AI Pro",
-    vendor: "CriticalCare AI",
-    category: "Clinical Decision Support",
-    description: "Real-time sepsis prediction using vital signs, labs, and clinical notes.",
-    rating: 4.8,
-    reviews: 127,
-    installs: "2,400+",
-    price: "$0.02/prediction",
-    certified: true,
-    installed: true
-  },
-  {
-    id: "los-predictor",
-    name: "LOS Predictor",
-    vendor: "StayWise Health",
-    category: "Operations",
-    description: "Accurate length of stay predictions to optimize bed management.",
-    rating: 4.6,
-    reviews: 89,
-    installs: "1,200+",
-    price: "$0.01/prediction",
-    certified: true,
-    installed: false
-  },
-  {
-    id: "fall-risk",
-    name: "FallGuard AI",
-    vendor: "SafetyFirst Med",
-    category: "Patient Safety",
-    description: "Continuous fall risk assessment using mobility and cognitive data.",
-    rating: 4.7,
-    reviews: 156,
-    installs: "1,800+",
-    price: "$0.015/patient/day",
-    certified: true,
-    installed: false
-  },
-  {
-    id: "med-reconcile",
-    name: "MedReconcile",
-    vendor: "PharmaSafe AI",
-    category: "Medication Safety",
-    description: "Automated medication reconciliation with interaction checking.",
-    rating: 4.9,
-    reviews: 234,
-    installs: "3,100+",
-    price: "$0.03/reconciliation",
-    certified: true,
-    installed: false
-  },
-  {
-    id: "discharge-planner",
-    name: "DischargePro",
-    vendor: "TransitionCare AI",
-    category: "Care Coordination",
-    description: "AI-powered discharge planning with resource matching.",
-    rating: 4.5,
-    reviews: 67,
-    installs: "890+",
-    price: "$0.05/discharge",
-    certified: true,
-    installed: false
-  },
-  {
-    id: "triage-assist",
-    name: "TriageAssist",
-    vendor: "EmergencyAI",
-    category: "Emergency",
-    description: "ED triage prioritization using presenting symptoms and vitals.",
-    rating: 4.8,
-    reviews: 198,
-    installs: "2,100+",
-    price: "$0.02/triage",
-    certified: true,
-    installed: false
-  }
-];
 
 type Section = "dashboard" | "marketplace" | "settings";
 type InstallState = "idle" | "connecting" | "authenticating" | "installing" | "complete";
@@ -136,15 +64,62 @@ type InstallState = "idle" | "connecting" | "authenticating" | "installing" | "c
 export default function ITAdminPage() {
   const [activeSection, setActiveSection] = useState<Section>("dashboard");
   const [search, setSearch] = useState("");
-  const [selectedApp, setSelectedApp] = useState<typeof marketplaceApps[0] | null>(null);
+  const [selectedApp, setSelectedApp] = useState<Module | null>(null);
   const [installState, setInstallState] = useState<InstallState>("idle");
-  const [installedAppIds, setInstalledAppIds] = useState<string[]>(["sepsis-ai"]);
+  const [installedAppIds, setInstalledAppIds] = useState<string[]>([]);
+  const [marketplaceApps, setMarketplaceApps] = useState<Module[]>([]);
+  const [installedModules, setInstalledModules] = useState<Module[]>([]);
+  const [loading, setLoading] = useState(true);
+  
+  const supabase = createClient();
+
+  // Fetch approved modules from Supabase
+  useEffect(() => {
+    const fetchModules = async () => {
+      setLoading(true);
+      
+      const { data, error } = await supabase
+        .from("modules")
+        .select(`
+          *,
+          profiles:user_id (
+            name,
+            username
+          )
+        `)
+        .eq("status", "approved")
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        console.error("Error fetching modules:", error);
+      } else {
+        setMarketplaceApps(data || []);
+      }
+      
+      setLoading(false);
+    };
+
+    fetchModules();
+  }, [supabase]);
 
   const filteredApps = marketplaceApps.filter(app => 
     app.name.toLowerCase().includes(search.toLowerCase()) ||
-    app.vendor.toLowerCase().includes(search.toLowerCase()) ||
-    app.category.toLowerCase().includes(search.toLowerCase())
+    app.description.toLowerCase().includes(search.toLowerCase())
   );
+
+  // Get vendor name from profile
+  const getVendorName = (app: Module) => {
+    if (app.profiles?.name) return app.profiles.name;
+    if (app.profiles?.username) return `@${app.profiles.username}`;
+    return "Unknown Vendor";
+  };
+
+  // Format price display
+  const formatPrice = (costPerYear: number) => {
+    if (costPerYear === 0) return "Free";
+    if (costPerYear < 1000) return `$${costPerYear}/year`;
+    return `$${(costPerYear / 1000).toFixed(1)}K/year`;
+  };
 
   const handleInstall = async () => {
     if (!selectedApp) return;
@@ -160,11 +135,16 @@ export default function ITAdminPage() {
     
     setInstallState("complete");
     setInstalledAppIds(prev => [...prev, selectedApp.id]);
+    setInstalledModules(prev => [...prev, selectedApp]);
     
     await new Promise(r => setTimeout(r, 1200));
     setSelectedApp(null);
     setInstallState("idle");
   };
+
+  // Calculate real metrics
+  const activeModuleCount = installedModules.length;
+  const totalMonthlySpend = installedModules.reduce((sum, m) => sum + (m.estimated_cost_year / 12), 0);
 
   return (
     <div>
@@ -199,7 +179,7 @@ export default function ITAdminPage() {
           >
             <item.icon className="w-4 h-4 mr-2" />
             {item.label}
-            {item.id === "marketplace" && (
+            {item.id === "marketplace" && marketplaceApps.length > 0 && (
               <Badge className="ml-2 bg-accent/20 text-accent border-0 text-xs">
                 {marketplaceApps.filter(a => !installedAppIds.includes(a.id)).length}
               </Badge>
@@ -215,9 +195,9 @@ export default function ITAdminPage() {
           <div className="grid grid-cols-4 gap-4">
             {[
               { label: "API Calls (30d)", value: metrics.totalApiCalls, change: metrics.apiCallsChange, icon: Activity, positive: true },
-              { label: "Active Modules", value: metrics.activeModules, change: null, icon: Boxes },
+              { label: "Active Modules", value: activeModuleCount, change: null, icon: Boxes },
               { label: "Avg Latency", value: metrics.avgLatency, change: metrics.latencyChange, icon: Clock, positive: true },
-              { label: "Monthly Spend", value: metrics.monthlySpend, change: metrics.spendChange, icon: DollarSign, positive: false },
+              { label: "Monthly Spend", value: `$${totalMonthlySpend.toFixed(0)}`, change: null, icon: DollarSign, positive: false },
             ].map((metric, i) => (
               <motion.div
                 key={metric.label}
@@ -265,41 +245,55 @@ export default function ITAdminPage() {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="border rounded-lg overflow-hidden">
-                <table className="w-full">
-                  <thead className="bg-muted/50">
-                    <tr className="text-left text-sm text-muted-foreground">
-                      <th className="px-4 py-3 font-medium">Module</th>
-                      <th className="px-4 py-3 font-medium">Vendor</th>
-                      <th className="px-4 py-3 font-medium text-right">API Calls (30d)</th>
-                      <th className="px-4 py-3 font-medium text-right">Avg Latency</th>
-                      <th className="px-4 py-3 font-medium text-right">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {installedModules.map((module) => (
-                      <tr key={module.id} className="border-t">
-                        <td className="px-4 py-3">
-                          <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center">
-                              <Boxes className="w-4 h-4 text-foreground" />
-                            </div>
-                            <span className="font-medium">{module.name}</span>
-                          </div>
-                        </td>
-                        <td className="px-4 py-3 text-muted-foreground">{module.vendor}</td>
-                        <td className="px-4 py-3 text-right font-mono text-sm">{module.calls}</td>
-                        <td className="px-4 py-3 text-right font-mono text-sm">{module.latency}</td>
-                        <td className="px-4 py-3 text-right">
-                          <Badge variant="secondary" className="bg-accent/10 text-accent border-0">
-                            Active
-                          </Badge>
-                        </td>
+              {installedModules.length === 0 ? (
+                <div className="text-center py-12">
+                  <Package className="w-12 h-12 mx-auto text-muted-foreground/50 mb-4" />
+                  <h3 className="font-medium mb-1">No modules installed</h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Browse the marketplace to install AI modules for your organization.
+                  </p>
+                  <Button onClick={() => setActiveSection("marketplace")} size="sm">
+                    <Store className="w-4 h-4 mr-2" />
+                    Browse Marketplace
+                  </Button>
+                </div>
+              ) : (
+                <div className="border rounded-lg overflow-hidden">
+                  <table className="w-full">
+                    <thead className="bg-muted/50">
+                      <tr className="text-left text-sm text-muted-foreground">
+                        <th className="px-4 py-3 font-medium">Module</th>
+                        <th className="px-4 py-3 font-medium">Vendor</th>
+                        <th className="px-4 py-3 font-medium text-right">Est. Cost/Year</th>
+                        <th className="px-4 py-3 font-medium text-right">Status</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                    </thead>
+                    <tbody>
+                      {installedModules.map((module) => (
+                        <tr key={module.id} className="border-t">
+                          <td className="px-4 py-3">
+                            <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center">
+                                <Boxes className="w-4 h-4 text-foreground" />
+                              </div>
+                              <span className="font-medium">{module.name}</span>
+                            </div>
+                          </td>
+                          <td className="px-4 py-3 text-muted-foreground">{getVendorName(module)}</td>
+                          <td className="px-4 py-3 text-right font-mono text-sm">
+                            {formatPrice(module.estimated_cost_year)}
+                          </td>
+                          <td className="px-4 py-3 text-right">
+                            <Badge variant="secondary" className="bg-accent/10 text-accent border-0">
+                              Active
+                            </Badge>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -329,20 +323,19 @@ export default function ITAdminPage() {
             <Card className="border-0 shadow-sm">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="font-semibold">Top Performing</h3>
-                  <Badge variant="secondary" className="text-xs">By accuracy</Badge>
+                  <h3 className="font-semibold">Available in Marketplace</h3>
+                  <Badge variant="secondary" className="text-xs">{marketplaceApps.length} modules</Badge>
                 </div>
                 <div className="space-y-3">
-                  {[
-                    { name: "Sepsis AI Pro", accuracy: "94.2%" },
-                    { name: "ReadmitRisk", accuracy: "91.8%" },
-                    { name: "NoteGenius", accuracy: "89.5%" },
-                  ].map((item, i) => (
-                    <div key={i} className="flex items-center justify-between p-2 bg-muted/50 rounded-lg">
-                      <span className="text-sm font-medium">{item.name}</span>
-                      <span className="font-mono text-sm text-accent">{item.accuracy}</span>
+                  {marketplaceApps.slice(0, 3).map((app) => (
+                    <div key={app.id} className="flex items-center justify-between p-2 bg-muted/50 rounded-lg">
+                      <span className="text-sm font-medium truncate flex-1">{app.name}</span>
+                      <span className="font-mono text-sm text-accent ml-2">{formatPrice(app.estimated_cost_year)}</span>
                     </div>
                   ))}
+                  {marketplaceApps.length === 0 && (
+                    <p className="text-sm text-muted-foreground text-center py-4">No approved modules yet</p>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -364,63 +357,85 @@ export default function ITAdminPage() {
             />
           </div>
 
+          {/* Loading State */}
+          {loading && (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+            </div>
+          )}
+
+          {/* Empty State */}
+          {!loading && filteredApps.length === 0 && (
+            <div className="text-center py-12">
+              <Package className="w-12 h-12 mx-auto text-muted-foreground/50 mb-4" />
+              <h3 className="font-medium mb-1">No modules available</h3>
+              <p className="text-sm text-muted-foreground">
+                {search ? "No modules match your search." : "Check back later for approved AI modules."}
+              </p>
+            </div>
+          )}
+
           {/* App Grid */}
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredApps.map((app, i) => {
-              const isInstalled = installedAppIds.includes(app.id);
-              return (
-                <motion.div
-                  key={app.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.05 }}
-                >
-                  <Card 
-                    className={`cursor-pointer transition-all hover:shadow-md border-0 shadow-sm ${
-                      isInstalled ? 'ring-2 ring-accent/50 bg-accent/5' : 'hover:ring-1 hover:ring-foreground/10'
-                    }`}
-                    onClick={() => !isInstalled && setSelectedApp(app)}
+          {!loading && filteredApps.length > 0 && (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {filteredApps.map((app, i) => {
+                const isInstalled = installedAppIds.includes(app.id);
+                return (
+                  <motion.div
+                    key={app.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.05 }}
                   >
-                    <CardContent className="p-5">
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center">
-                          <Boxes className="w-5 h-5 text-foreground" />
-                        </div>
-                        {isInstalled ? (
-                          <Badge className="bg-accent text-white border-0">
-                            <Check className="w-3 h-3 mr-1" />
-                            Installed
-                          </Badge>
-                        ) : (
-                          <Badge variant="secondary">{app.price}</Badge>
-                        )}
-                      </div>
-                      
-                      <h3 className="font-semibold mb-1">{app.name}</h3>
-                      <p className="text-sm text-muted-foreground mb-2">{app.vendor}</p>
-                      <p className="text-sm text-muted-foreground mb-4 line-clamp-2">{app.description}</p>
-                      
-                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                        <div className="flex items-center gap-1">
-                          <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
-                          <span>{app.rating}</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Download className="w-4 h-4" />
-                          <span>{app.installs}</span>
-                        </div>
-                        {app.certified && (
-                          <div className="flex items-center gap-1 ml-auto">
-                            <Shield className="w-4 h-4 text-accent" />
+                    <Card 
+                      className={`cursor-pointer transition-all hover:shadow-md border-0 shadow-sm ${
+                        isInstalled ? 'ring-2 ring-accent/50 bg-accent/5' : 'hover:ring-1 hover:ring-foreground/10'
+                      }`}
+                      onClick={() => !isInstalled && setSelectedApp(app)}
+                    >
+                      <CardContent className="p-5">
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center">
+                            <Boxes className="w-5 h-5 text-foreground" />
                           </div>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              );
-            })}
-          </div>
+                          {isInstalled ? (
+                            <Badge className="bg-accent text-white border-0">
+                              <Check className="w-3 h-3 mr-1" />
+                              Installed
+                            </Badge>
+                          ) : (
+                            <Badge variant="secondary">{formatPrice(app.estimated_cost_year)}</Badge>
+                          )}
+                        </div>
+                        
+                        <h3 className="font-semibold mb-1">{app.name}</h3>
+                        <p className="text-sm text-muted-foreground mb-2">{getVendorName(app)}</p>
+                        <p className="text-sm text-muted-foreground mb-4 line-clamp-2">{app.description}</p>
+                        
+                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                          <div className="flex items-center gap-1">
+                            <CheckCircle2 className="w-4 h-4 text-accent" />
+                            <span>Approved</span>
+                          </div>
+                          {app.link && (
+                            <a 
+                              href={app.link} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-1 hover:text-foreground ml-auto"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <ExternalLink className="w-4 h-4" />
+                            </a>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                );
+              })}
+            </div>
+          )}
         </div>
       )}
 
@@ -459,14 +474,12 @@ export default function ITAdminPage() {
                       </div>
                       <div className="flex-1">
                         <h2 className="text-xl font-semibold">{selectedApp.name}</h2>
-                        <p className="text-muted-foreground">{selectedApp.vendor}</p>
+                        <p className="text-muted-foreground">{getVendorName(selectedApp)}</p>
                         <div className="flex items-center gap-2 mt-2">
                           <div className="flex items-center gap-1 text-sm">
-                            <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
-                            <span>{selectedApp.rating}</span>
+                            <CheckCircle2 className="w-4 h-4 text-accent" />
+                            <span>Approved</span>
                           </div>
-                          <span className="text-muted-foreground">•</span>
-                          <span className="text-sm text-muted-foreground">{selectedApp.installs} installs</span>
                         </div>
                       </div>
                       <button 
@@ -501,8 +514,20 @@ export default function ITAdminPage() {
 
                     <div className="flex items-center justify-between p-4 bg-muted/50 rounded-xl mb-6">
                       <span className="text-sm">Estimated cost</span>
-                      <span className="font-semibold">{selectedApp.price}</span>
+                      <span className="font-semibold">{formatPrice(selectedApp.estimated_cost_year)}</span>
                     </div>
+
+                    {selectedApp.link && (
+                      <a 
+                        href={selectedApp.link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center justify-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-4"
+                      >
+                        <ExternalLink className="w-4 h-4" />
+                        View documentation
+                      </a>
+                    )}
 
                     <Button 
                       className="w-full h-12 bg-foreground hover:bg-foreground/90"

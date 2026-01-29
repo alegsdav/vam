@@ -2,7 +2,7 @@
 
 export const dynamic = 'force-dynamic';
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { 
   ArrowRight,
@@ -18,18 +18,34 @@ import {
   Code2,
   FileJson,
   Rocket,
-  Info
+  Info,
+  Loader2,
+  Package
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { usePersona } from "./persona-context";
+import { createClient } from "@/lib/supabase/client";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+
+// Type for modules from Supabase
+type Module = {
+  id: string;
+  user_id: string;
+  name: string;
+  description: string;
+  estimated_cost_year: number;
+  link: string;
+  status: "pending" | "approved" | "rejected";
+  created_at: string;
+  updated_at: string;
+};
 
 // Mock data - same underlying numbers, different labels
 const mockData = {
@@ -49,19 +65,14 @@ const pipelineStatus = {
   destination: { status: "healthy", label: "Applications" },
 };
 
-// Mock data for tabs
-const myApps = [
-  { name: "Sepsis AI Pro", status: "active", calls: "2.1K", revenue: "$4,230" },
-  { name: "Cardiac Risk Model", status: "active", calls: "1.4K", revenue: "$2,180" },
-  { name: "LOS Predictor", status: "pending", calls: "—", revenue: "—" },
-];
-
+// Mock integrations (would come from a real integration table)
 const myIntegrations = [
   { name: "Epic - Cardiology Unit", status: "connected", patients: "1,247", lastSync: "2 min ago" },
   { name: "Epic - Emergency Dept", status: "connected", patients: "892", lastSync: "5 min ago" },
   { name: "Cerner - Main Campus", status: "syncing", patients: "3,108", lastSync: "syncing..." },
 ];
 
+// Mock logs (would come from a real logging service)
 const recentLogs = [
   { timestamp: "2026-01-27T14:32:01Z", level: "info", message: "POST /v1/predict - 200 OK (142ms)", endpoint: "/v1/predict" },
   { timestamp: "2026-01-27T14:31:58Z", level: "info", message: "POST /v1/predict - 200 OK (138ms)", endpoint: "/v1/predict" },
@@ -72,7 +83,40 @@ const recentLogs = [
 
 export default function PortalHomePage() {
   const { persona, labels } = usePersona();
-  const [activeTab, setActiveTab] = useState("apps");
+  const [myApps, setMyApps] = useState<Module[]>([]);
+  const [loadingApps, setLoadingApps] = useState(true);
+  
+  const supabase = createClient();
+
+  // Fetch user's own modules
+  useEffect(() => {
+    const fetchMyModules = async () => {
+      setLoadingApps(true);
+      
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        setLoadingApps(false);
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from("modules")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        console.error("Error fetching modules:", error);
+      } else {
+        setMyApps(data || []);
+      }
+      
+      setLoadingApps(false);
+    };
+
+    fetchMyModules();
+  }, [supabase]);
 
   // Format values based on persona
   const getVolumeDisplay = () => {
@@ -92,6 +136,24 @@ export default function PortalHomePage() {
   const getValueDisplay = () => {
     if (persona === "clinical") return `${mockData.value}`;
     return `$${mockData.value.toLocaleString()}`;
+  };
+
+  // Get status badge styling
+  const getStatusBadge = (status: Module["status"]) => {
+    switch (status) {
+      case "approved":
+        return { className: "bg-accent/10 text-accent border-0", label: "Active" };
+      case "pending":
+        return { className: "bg-amber-100 text-amber-700 border-0", label: "Pending Review" };
+      case "rejected":
+        return { className: "bg-red-100 text-red-700 border-0", label: "Rejected" };
+    }
+  };
+
+  // Format price
+  const formatPrice = (costPerYear: number) => {
+    if (costPerYear === 0) return "Free";
+    return `$${(costPerYear / 12).toFixed(0)}/mo`;
   };
 
   return (
@@ -391,6 +453,11 @@ export default function PortalHomePage() {
                   <TabsTrigger value="apps" className="flex items-center gap-2">
                     <Rocket className="w-4 h-4" />
                     My Apps
+                    {myApps.length > 0 && (
+                      <Badge variant="secondary" className="ml-1 text-xs">
+                        {myApps.length}
+                      </Badge>
+                    )}
                   </TabsTrigger>
                   <TabsTrigger value="integrations" className="flex items-center gap-2">
                     <Building2 className="w-4 h-4" />
@@ -402,33 +469,49 @@ export default function PortalHomePage() {
                   </TabsTrigger>
                 </TabsList>
 
-                {/* My Apps Tab (Startup View) */}
+                {/* My Apps Tab (Startup View) - Now fetches from Supabase */}
                 <TabsContent value="apps">
-                  <div className="space-y-3">
-                    {myApps.map((app, i) => (
-                      <div key={i} className="flex items-center justify-between p-4 bg-muted/30 rounded-xl hover:bg-muted/50 transition-colors">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-lg bg-foreground/10 flex items-center justify-center">
-                            <Boxes className="w-5 h-5" />
+                  {loadingApps ? (
+                    <div className="flex items-center justify-center py-8">
+                      <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+                    </div>
+                  ) : myApps.length === 0 ? (
+                    <div className="text-center py-8">
+                      <Package className="w-10 h-10 mx-auto text-muted-foreground/50 mb-3" />
+                      <h3 className="font-medium mb-1">No apps submitted</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Submit your first AI module from the AI Startup portal.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {myApps.map((app) => {
+                        const statusBadge = getStatusBadge(app.status);
+                        return (
+                          <div key={app.id} className="flex items-center justify-between p-4 bg-muted/30 rounded-xl hover:bg-muted/50 transition-colors">
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 rounded-lg bg-foreground/10 flex items-center justify-center">
+                                <Boxes className="w-5 h-5" />
+                              </div>
+                              <div>
+                                <p className="font-medium">{app.name}</p>
+                                <p className="text-xs text-muted-foreground line-clamp-1">{app.description}</p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-4">
+                              <div className="text-right">
+                                <p className="font-medium text-accent">{formatPrice(app.estimated_cost_year)}</p>
+                                <p className="text-xs text-muted-foreground">est. revenue</p>
+                              </div>
+                              <Badge variant="secondary" className={statusBadge.className}>
+                                {statusBadge.label}
+                              </Badge>
+                            </div>
                           </div>
-                          <div>
-                            <p className="font-medium">{app.name}</p>
-                            <p className="text-xs text-muted-foreground">{app.calls} calls this week</p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-4">
-                          <div className="text-right">
-                            <p className="font-medium text-accent">{app.revenue}</p>
-                            <p className="text-xs text-muted-foreground">revenue</p>
-                          </div>
-                          <Badge variant={app.status === "active" ? "default" : "secondary"} 
-                            className={app.status === "active" ? "bg-accent/10 text-accent border-0" : ""}>
-                            {app.status}
-                          </Badge>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </TabsContent>
 
                 {/* My Integrations Tab (Hospital View) */}
