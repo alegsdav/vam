@@ -2,7 +2,6 @@
 
 import { motion, useScroll, useTransform } from "framer-motion";
 import Link from "next/link";
-import Image from "next/image";
 import { useRef } from "react";
 import { 
   ArrowRight, 
@@ -12,7 +11,6 @@ import {
   Layers,
   Code2,
   Building2,
-  Stethoscope,
   Rocket,
   Check,
   Brain,
@@ -21,17 +19,32 @@ import {
   Heart,
   Clock,
   BarChart3,
-  Lock,
-  Globe,
   Workflow,
   ChevronRight,
-  PlayCircle,
   AlertTriangle,
-  TrendingUp
+  TrendingUp,
+  Quote,
+  Lock,
+  RefreshCw,
+  Plug,
+  Users,
+  ShieldCheck,
+  Timer,
+  Undo2,
+  Handshake,
+  Stethoscope
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { LandingHeader } from "@/components/landing/landing-header";
+import { LandingFooter } from "@/components/landing/landing-footer";
+import { ExitIntentModal } from "@/components/landing/exit-intent-modal";
+import { trackCTA, trackSectionView, dataAttributes } from "@/lib/analytics";
+
+// ============================================================================
+// DATA
+// ============================================================================
 
 const trustedBy = [
   "Epic Systems",
@@ -137,57 +150,106 @@ const modules = [
   }
 ];
 
-const pricing = [
+const personas = [
   {
-    title: "Hospitals & Health Systems",
+    id: "hospitals",
     icon: Building2,
-    price: "Custom",
-    period: "enterprise pricing",
-    description: "Full platform access with dedicated support and SLA guarantees.",
-    features: [
-      "Unlimited AI module installs",
-      "Admin dashboard & analytics",
-      "HIPAA BAA included",
-      "24/7 priority support",
-      "Custom integrations",
-      "On-premise deployment option"
+    title: "Healthcare Organizations",
+    subtitle: "Hospitals & Health Systems",
+    pain: "You're drowning in AI vendor pitches but can't get a single model deployed without a 12-month integration project.",
+    solution: "Scrub gives you a curated marketplace of pre-validated AI modules that install in one click — directly into your existing EMR.",
+    benefits: [
+      "No more vendor management chaos",
+      "Pre-negotiated BAAs included",
+      "Unified analytics across all AI tools",
+      "Rollback any module instantly"
     ],
-    cta: "Contact Sales",
-    popular: true
+    cta: "Explore for Hospitals",
+    ctaHref: "/portal/auth"
   },
   {
-    title: "AI Startups",
+    id: "startups",
     icon: Rocket,
-    price: "$0",
-    period: "to list",
-    description: "Get your AI in front of thousands of hospitals. Pay only when you succeed.",
-    features: [
-      "Free marketplace listing",
-      "No-code data mapper",
-      "FHIR translation layer",
-      "Revenue share model",
-      "Analytics dashboard",
-      "Developer documentation"
+    title: "AI Startups & Vendors",
+    subtitle: "Bring Your AI to Healthcare",
+    pain: "You've built amazing AI, but getting into hospitals means navigating compliance nightmares and waiting months for IT to approve a pilot.",
+    solution: "List your AI on Scrub and get instant distribution to thousands of hospitals — we handle the HIPAA compliance, FHIR translation, and billing.",
+    benefits: [
+      "Zero compliance overhead",
+      "Revenue from day one",
+      "No-code data mapping tools",
+      "Built-in analytics dashboard"
     ],
     cta: "List Your AI",
-    popular: false
+    ctaHref: "/portal/auth"
   },
   {
-    title: "Software Developers",
-    icon: Code2,
-    price: "$99",
-    period: "per month",
-    description: "Embed healthcare AI into your applications with our SDK.",
-    features: [
-      "Widget SDK access",
-      "REST API access",
-      "10,000 API calls/mo",
-      "Webhook integrations",
-      "Community support",
-      "Sandbox environment"
+    id: "admins",
+    icon: ShieldCheck,
+    title: "Platform Administrators",
+    subtitle: "IT & Security Teams",
+    pain: "Every new AI tool means another security review, another integration headache, and another vendor to manage.",
+    solution: "Scrub provides a single control plane for all AI modules — one security review, one integration, complete visibility.",
+    benefits: [
+      "Centralized access controls",
+      "Audit logs for every action",
+      "VPN & on-premise options",
+      "Bulk deployment tools"
     ],
-    cta: "Start Building",
-    popular: false
+    cta: "See Admin Tools",
+    ctaHref: "/portal/auth"
+  }
+];
+
+const objections = [
+  {
+    icon: ShieldCheck,
+    title: "Is this really HIPAA compliant?",
+    answer: "Yes. Every AI module on Scrub operates under our enterprise BAA. Data never leaves your infrastructure — Scrub acts as a secure bridge, not a data warehouse. We've passed security audits at 50+ health systems."
+  },
+  {
+    icon: Timer,
+    title: "How long until we see value?",
+    answer: "Most hospitals have their first AI module running within 48 hours. No lengthy integration projects. No waiting for IT tickets. Install, configure, go."
+  },
+  {
+    icon: Plug,
+    title: "Will this work with our EMR?",
+    answer: "Scrub is certified for Epic, Cerner, Meditech, and any FHIR-compliant system. Our integration layer handles the translation so each AI module just works."
+  },
+  {
+    icon: Handshake,
+    title: "Can we trust these AI vendors?",
+    answer: "Every vendor on Scrub goes through our vetting process: clinical validation review, security audit, and compliance check. We only approve AI that meets our quality bar."
+  },
+  {
+    icon: Undo2,
+    title: "What if something goes wrong?",
+    answer: "Every decision is reversible. Disable any module with one click. Roll back to previous versions instantly. Your data stays yours — remove Scrub completely with no lock-in."
+  }
+];
+
+const testimonials = [
+  {
+    quote: "We deployed three AI modules in a week — something that would have taken us 18 months to do on our own. Scrub changed how we think about clinical AI.",
+    name: "Dr. Sarah Chen",
+    role: "Chief Medical Information Officer",
+    company: "Memorial Regional Health",
+    image: null // Will use initials
+  },
+  {
+    quote: "As a startup, getting into hospitals felt impossible. Scrub got us our first 10 deployments in 60 days. The compliance layer alone saved us $500K.",
+    name: "Marcus Johnson",
+    role: "CEO & Co-founder",
+    company: "CareFlow Analytics",
+    image: null
+  },
+  {
+    quote: "Finally, one dashboard for all our AI tools. The security team actually likes this — they did one review and now we can add modules without re-auditing.",
+    name: "Jennifer Walsh",
+    role: "VP of IT Security",
+    company: "Northwest Medical Center",
+    image: null
   }
 ];
 
@@ -195,6 +257,10 @@ const fadeInUp = {
   initial: { opacity: 0, y: 30 },
   animate: { opacity: 1, y: 0 },
 };
+
+// ============================================================================
+// COMPONENT
+// ============================================================================
 
 export default function LandingPage() {
   const heroRef = useRef<HTMLDivElement>(null);
@@ -208,94 +274,91 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen bg-background overflow-x-hidden">
+      {/* Exit Intent Modal (disabled by default) */}
+      <ExitIntentModal enabled={false} />
+      
       {/* Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-lg border-b">
-        <div className="max-w-7xl mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <Link href="/" className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-foreground flex items-center justify-center">
-                <span className="text-background font-bold text-lg">S</span>
-              </div>
-              <span className="font-semibold text-xl tracking-tight">Scrub</span>
-            </Link>
-            
-            <nav className="hidden md:flex items-center gap-8">
-              <a href="#features" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Features</a>
-              <a href="#modules" className="text-sm text-muted-foreground hover:text-foreground transition-colors">AI Modules</a>
-              <a href="#pricing" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Pricing</a>
-            </nav>
+      <LandingHeader />
 
-            <div className="flex items-center gap-3">
-              <Button variant="ghost" size="sm" className="hidden sm:flex" asChild>
-                <Link href="/portal">Portal</Link>
-              </Button>
-              <Button asChild className="bg-accent hover:bg-accent/90 text-white">
-                <Link href="/demo" className="flex items-center gap-2">
-                  <PlayCircle className="w-4 h-4" />
-                  See Demo
-                </Link>
-              </Button>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      {/* Hero Section */}
-      <section ref={heroRef} className="relative pt-32 pb-20 px-6 overflow-hidden">
+      {/* ================================================================== */}
+      {/* HERO SECTION */}
+      {/* ================================================================== */}
+      <section 
+        ref={heroRef} 
+        className="relative pt-28 pb-16 px-8 overflow-hidden"
+        {...dataAttributes.section("hero")}
+      >
         {/* Background gradient */}
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,#a3e635_0%,transparent_50%)] opacity-10" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,#a3e635_0%,transparent_50%)] opacity-[0.07]" />
         
         <motion.div 
-          className="max-w-7xl mx-auto"
+          className="max-w-[1400px] mx-auto"
           style={{ y, opacity }}
         >
           <motion.div 
-            className="text-center max-w-4xl mx-auto mb-16"
+            className="text-center max-w-5xl mx-auto mb-14"
             initial="initial"
             animate="animate"
             variants={{ animate: { transition: { staggerChildren: 0.1 } } }}
           >
-            <motion.div variants={fadeInUp} className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border bg-background text-sm font-medium mb-8">
+            <motion.div variants={fadeInUp} className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border bg-background/80 text-sm font-medium mb-8">
               <Sparkles className="w-4 h-4 text-accent" />
               <span>The AI Layer for Healthcare</span>
             </motion.div>
             
             <motion.h1 
               variants={fadeInUp}
-              className="text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-[1.1] mb-6"
+              className="text-5xl md:text-6xl lg:text-[4.5rem] font-bold tracking-tight leading-[1.08] mb-8"
             >
-              One platform.
-              <br />
-              <span className="relative">
-                <span className="text-muted-foreground/30 line-through decoration-2">Zero busywork.</span>
-                <span className="absolute left-0 top-0 text-accent"> Infinite AI.</span>
-              </span>
+              Deploy clinical AI in minutes,{" "}
+              <br className="hidden md:block" />
+              <span className="text-accent">not months</span>
             </motion.h1>
             
             <motion.p 
               variants={fadeInUp}
-              className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed mb-10"
+              className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed mb-8"
             >
-              Scrub connects hospitals to AI instantly. Install clinical AI modules 
-              in one click, right inside your existing EMR.
+              Scrub connects hospitals to AI instantly. Browse the marketplace, 
+              click install, and see AI insights appear right inside your EMR.
             </motion.p>
 
-            <motion.div variants={fadeInUp} className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Button size="lg" asChild className="bg-accent hover:bg-accent/90 text-white px-8 h-12 text-base">
-                <Link href="/demo">
-                  See Demo
+            <motion.div variants={fadeInUp} className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-6">
+              <Button 
+                size="lg" 
+                asChild 
+                className="bg-accent hover:bg-accent/90 text-white px-8 h-12 text-base"
+                onClick={() => trackCTA("signup", "hero")}
+                {...dataAttributes.cta("signup", "hero")}
+              >
+                <Link href="/portal/auth">
+                  Get Scrub Free
                   <ArrowRight className="w-4 h-4 ml-2" />
                 </Link>
               </Button>
-              <Button size="lg" variant="outline" className="px-8 h-12 text-base">
-                Contact Sales
+              <Button 
+                size="lg" 
+                variant="ghost" 
+                className="px-8 h-12 text-base text-muted-foreground hover:text-foreground"
+                onClick={() => trackCTA("contact-sales", "hero")}
+                {...dataAttributes.cta("contact-sales", "hero")}
+              >
+                Talk to Sales
               </Button>
             </motion.div>
+
+            {/* Trust microcopy */}
+            <motion.p 
+              variants={fadeInUp}
+              className="text-sm text-muted-foreground"
+            >
+              Free to start · No credit card required · HIPAA compliant
+            </motion.p>
           </motion.div>
 
           {/* Hero Product Mockup - Doctor's View */}
           <motion.div 
-            className="relative max-w-5xl mx-auto"
+            className="relative max-w-6xl mx-auto"
             initial={{ opacity: 0, y: 60 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4, duration: 0.8 }}
@@ -445,15 +508,16 @@ export default function LandingPage() {
           </motion.div>
         </motion.div>
 
-        {/* Trusted By */}
+        {/* Social Proof Strip */}
         <motion.div 
-          className="max-w-4xl mx-auto mt-20 text-center"
+          className="max-w-5xl mx-auto mt-16 text-center"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.6 }}
+          {...dataAttributes.section("social-proof")}
         >
           <p className="text-sm text-muted-foreground mb-6">Trusted by leading health systems</p>
-          <div className="flex items-center justify-center gap-8 md:gap-12 flex-wrap opacity-50">
+          <div className="flex items-center justify-center gap-10 md:gap-16 flex-wrap opacity-40">
             {trustedBy.map((name, i) => (
               <span key={i} className="text-lg font-semibold text-muted-foreground">{name}</span>
             ))}
@@ -461,9 +525,233 @@ export default function LandingPage() {
         </motion.div>
       </section>
 
-      {/* Features Section */}
-      <section id="features" className="py-24 px-6 bg-muted/30">
-        <div className="max-w-7xl mx-auto">
+      {/* ================================================================== */}
+      {/* PROBLEM FRAMING SECTION */}
+      {/* ================================================================== */}
+      <section 
+        className="py-24 px-8 bg-foreground text-background"
+        {...dataAttributes.section("problem")}
+      >
+        <div className="max-w-5xl mx-auto">
+          <motion.div 
+            className="text-center"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+          >
+            <Badge className="bg-background/10 text-background border-0 mb-6">The Problem</Badge>
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight mb-8 leading-tight">
+              Healthcare AI is stuck in pilot purgatory
+            </h2>
+            <div className="grid md:grid-cols-3 gap-8 text-left mt-12">
+              {[
+                {
+                  stat: "18 months",
+                  label: "Average time to deploy a single AI model in a hospital"
+                },
+                {
+                  stat: "73%",
+                  label: "Of AI pilots never make it to production"
+                },
+                {
+                  stat: "$2.4M",
+                  label: "Average cost of a failed healthcare AI integration"
+                }
+              ].map((item, i) => (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: i * 0.1 }}
+                  className="text-center"
+                >
+                  <p className="text-5xl font-bold text-accent mb-2">{item.stat}</p>
+                  <p className="text-background/70">{item.label}</p>
+                </motion.div>
+              ))}
+            </div>
+            <motion.p
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.4 }}
+              className="text-xl text-background/70 mt-12 max-w-2xl mx-auto"
+            >
+              You're managing spreadsheets of vendors, waiting on IT tickets, negotiating BAAs, 
+              and still can't get AI to your clinicians. <span className="text-background font-medium">There's a better way.</span>
+            </motion.p>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* ================================================================== */}
+      {/* SOLUTION OVERVIEW SECTION */}
+      {/* ================================================================== */}
+      <section 
+        className="py-24 px-8"
+        {...dataAttributes.section("solution")}
+      >
+        <div className="max-w-[1400px] mx-auto">
+          <motion.div 
+            className="text-center max-w-3xl mx-auto mb-16"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+          >
+            <Badge className="bg-accent/10 text-accent border-0 mb-4">The Solution</Badge>
+            <h2 className="text-4xl md:text-5xl font-bold tracking-tight mb-6">
+              Scrub is the app store for healthcare AI
+            </h2>
+            <p className="text-xl text-muted-foreground">
+              One platform to discover, deploy, and manage clinical AI — without the integration nightmare.
+            </p>
+          </motion.div>
+
+          <div className="grid md:grid-cols-3 gap-8">
+            {[
+              {
+                step: "1",
+                icon: Users,
+                title: "Browse the Marketplace",
+                description: "Explore pre-validated AI modules from vetted vendors. Every module is HIPAA-compliant and EMR-compatible."
+              },
+              {
+                step: "2",
+                icon: Zap,
+                title: "Install in One Click",
+                description: "No IT tickets. No vendor calls. Click install and the AI appears inside your existing EMR workflow."
+              },
+              {
+                step: "3",
+                icon: BarChart3,
+                title: "Monitor & Optimize",
+                description: "Track usage, outcomes, and costs from a single dashboard. Disable or rollback any module instantly."
+              }
+            ].map((item, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1 }}
+              >
+                <Card className="h-full border-0 shadow-sm bg-muted/30">
+                  <CardContent className="p-8">
+                    <div className="flex items-center gap-4 mb-6">
+                      <div className="w-12 h-12 rounded-full bg-accent text-white flex items-center justify-center text-xl font-bold">
+                        {item.step}
+                      </div>
+                      <item.icon className="w-8 h-8 text-accent" />
+                    </div>
+                    <h3 className="text-xl font-semibold mb-3">{item.title}</h3>
+                    <p className="text-muted-foreground">{item.description}</p>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ================================================================== */}
+      {/* PERSONA-FOCUSED SECTIONS */}
+      {/* ================================================================== */}
+      <section 
+        className="py-24 px-8 bg-muted/30"
+        {...dataAttributes.section("personas")}
+      >
+        <div className="max-w-[1400px] mx-auto">
+          <motion.div 
+            className="text-center max-w-3xl mx-auto mb-16"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+          >
+            <Badge className="bg-accent/10 text-accent border-0 mb-4">Built For You</Badge>
+            <h2 className="text-4xl md:text-5xl font-bold tracking-tight mb-6">
+              Whether you build, buy, or manage AI
+            </h2>
+            <p className="text-xl text-muted-foreground">
+              Scrub works for everyone in the healthcare AI ecosystem.
+            </p>
+          </motion.div>
+
+          <div className="space-y-8">
+            {personas.map((persona, i) => (
+              <motion.div
+                key={persona.id}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1 }}
+              >
+                <Card className="border-0 shadow-sm overflow-hidden">
+                  <CardContent className="p-0">
+                    <div className={`grid md:grid-cols-2 ${i % 2 === 1 ? 'md:grid-flow-dense' : ''}`}>
+                      {/* Content Side */}
+                      <div className={`p-8 md:p-12 ${i % 2 === 1 ? 'md:col-start-2' : ''}`}>
+                        <div className="flex items-center gap-3 mb-4">
+                          <div className="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center">
+                            <persona.icon className="w-6 h-6 text-accent" />
+                          </div>
+                          <div>
+                            <p className="text-sm text-muted-foreground">{persona.subtitle}</p>
+                            <h3 className="text-xl font-semibold">{persona.title}</h3>
+                          </div>
+                        </div>
+                        
+                        <div className="bg-muted/50 rounded-lg p-4 mb-6">
+                          <p className="text-muted-foreground italic">"{persona.pain}"</p>
+                        </div>
+                        
+                        <p className="text-foreground mb-6">{persona.solution}</p>
+                        
+                        <ul className="space-y-2 mb-6">
+                          {persona.benefits.map((benefit, j) => (
+                            <li key={j} className="flex items-center gap-2 text-sm">
+                              <Check className="w-4 h-4 text-accent flex-shrink-0" />
+                              <span>{benefit}</span>
+                            </li>
+                          ))}
+                        </ul>
+                        
+                        <Button 
+                          asChild
+                          onClick={() => trackCTA("signup", "personas")}
+                          {...dataAttributes.cta("signup", "personas")}
+                        >
+                          <Link href={persona.ctaHref}>
+                            {persona.cta}
+                            <ArrowRight className="w-4 h-4 ml-2" />
+                          </Link>
+                        </Button>
+                      </div>
+                      
+                      {/* Visual Side */}
+                      <div className={`bg-muted/50 p-8 md:p-12 flex items-center justify-center ${i % 2 === 1 ? 'md:col-start-1' : ''}`}>
+                        <div className="w-full max-w-sm aspect-square bg-background rounded-2xl border shadow-sm flex items-center justify-center">
+                          <persona.icon className="w-24 h-24 text-muted-foreground/20" />
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ================================================================== */}
+      {/* FEATURES SECTION */}
+      {/* ================================================================== */}
+      <section 
+        id="features" 
+        className="py-24 px-8"
+        {...dataAttributes.section("features")}
+      >
+        <div className="max-w-[1400px] mx-auto">
           <motion.div 
             className="text-center max-w-3xl mx-auto mb-16"
             initial={{ opacity: 0, y: 20 }}
@@ -503,9 +791,15 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* AI Modules Section */}
-      <section id="modules" className="py-24 px-6">
-        <div className="max-w-7xl mx-auto">
+      {/* ================================================================== */}
+      {/* AI MODULES SECTION */}
+      {/* ================================================================== */}
+      <section 
+        id="modules" 
+        className="py-24 px-8 bg-muted/30"
+        {...dataAttributes.section("modules")}
+      >
+        <div className="max-w-[1400px] mx-auto">
           <motion.div 
             className="text-center max-w-3xl mx-auto mb-16"
             initial={{ opacity: 0, y: 20 }}
@@ -530,7 +824,7 @@ export default function LandingPage() {
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.1 }}
               >
-                <Card className="h-full hover:shadow-lg transition-shadow cursor-pointer group">
+                <Card className="h-full hover:shadow-lg transition-shadow cursor-pointer group border-0 shadow-sm">
                   <CardContent className="p-6">
                     <div className="flex items-start justify-between mb-4">
                       <div className={`w-12 h-12 rounded-xl ${module.color} flex items-center justify-center`}>
@@ -560,8 +854,14 @@ export default function LandingPage() {
             whileInView={{ opacity: 1 }}
             viewport={{ once: true }}
           >
-            <Button size="lg" variant="outline" asChild>
-              <Link href="/demo">
+            <Button 
+              size="lg" 
+              variant="outline" 
+              asChild
+              onClick={() => trackCTA("signup", "modules")}
+              {...dataAttributes.cta("signup", "modules")}
+            >
+              <Link href="/portal/auth">
                 View All Modules
                 <ArrowRight className="w-4 h-4 ml-2" />
               </Link>
@@ -570,63 +870,49 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Pricing Section */}
-      <section id="pricing" className="py-24 px-6 bg-muted/30">
-        <div className="max-w-7xl mx-auto">
+      {/* ================================================================== */}
+      {/* OBJECTION HANDLING SECTION */}
+      {/* ================================================================== */}
+      <section 
+        className="py-24 px-8"
+        {...dataAttributes.section("objections")}
+      >
+        <div className="max-w-5xl mx-auto">
           <motion.div 
-            className="text-center max-w-3xl mx-auto mb-16"
+            className="text-center mb-16"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
           >
-            <Badge className="bg-accent/10 text-accent border-0 mb-4">Pricing</Badge>
+            <Badge className="bg-accent/10 text-accent border-0 mb-4">Common Questions</Badge>
             <h2 className="text-4xl md:text-5xl font-bold tracking-tight mb-6">
-              Simple, transparent pricing
+              Let's address the elephant in the room
             </h2>
             <p className="text-xl text-muted-foreground">
-              Whether you're a hospital, AI startup, or developer — there's a plan for you.
+              Healthcare AI adoption comes with real concerns. Here's how Scrub handles them.
             </p>
           </motion.div>
 
-          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            {pricing.map((plan, i) => (
+          <div className="space-y-6">
+            {objections.map((objection, i) => (
               <motion.div
                 key={i}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
+                transition={{ delay: i * 0.05 }}
               >
-                <Card className={`h-full relative ${plan.popular ? 'border-accent shadow-lg' : ''}`}>
-                  {plan.popular && (
-                    <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                      <Badge className="bg-accent text-white border-0">Most Popular</Badge>
-                    </div>
-                  )}
+                <Card className="border-0 shadow-sm">
                   <CardContent className="p-6">
-                    <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center mb-4">
-                      <plan.icon className="w-6 h-6 text-foreground" />
+                    <div className="flex gap-4">
+                      <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center flex-shrink-0">
+                        <objection.icon className="w-5 h-5 text-accent" />
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-semibold mb-2">{objection.title}</h3>
+                        <p className="text-muted-foreground">{objection.answer}</p>
+                      </div>
                     </div>
-                    <h3 className="text-xl font-semibold mb-2">{plan.title}</h3>
-                    <div className="mb-4">
-                      <span className="text-4xl font-bold">{plan.price}</span>
-                      <span className="text-muted-foreground ml-1">{plan.period}</span>
-                    </div>
-                    <p className="text-sm text-muted-foreground mb-6">{plan.description}</p>
-                    <ul className="space-y-3 mb-6">
-                      {plan.features.map((feature, j) => (
-                        <li key={j} className="flex items-center gap-2 text-sm">
-                          <Check className="w-4 h-4 text-accent flex-shrink-0" />
-                          <span>{feature}</span>
-                        </li>
-                      ))}
-                    </ul>
-                    <Button 
-                      className={`w-full ${plan.popular ? 'bg-accent hover:bg-accent/90 text-white' : ''}`}
-                      variant={plan.popular ? 'default' : 'outline'}
-                    >
-                      {plan.cta}
-                    </Button>
                   </CardContent>
                 </Card>
               </motion.div>
@@ -635,9 +921,72 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="py-24 px-6">
-        <div className="max-w-4xl mx-auto">
+      {/* ================================================================== */}
+      {/* TESTIMONIALS SECTION */}
+      {/* ================================================================== */}
+      <section 
+        className="py-24 px-8 bg-muted/30"
+        {...dataAttributes.section("testimonials")}
+      >
+        <div className="max-w-[1400px] mx-auto">
+          <motion.div 
+            className="text-center max-w-3xl mx-auto mb-16"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+          >
+            <Badge className="bg-accent/10 text-accent border-0 mb-4">Testimonials</Badge>
+            <h2 className="text-4xl md:text-5xl font-bold tracking-tight mb-6">
+              Trusted by healthcare leaders
+            </h2>
+            <p className="text-xl text-muted-foreground">
+              See what hospitals and AI companies are saying about Scrub.
+            </p>
+          </motion.div>
+
+          <div className="grid md:grid-cols-3 gap-8">
+            {testimonials.map((testimonial, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1 }}
+              >
+                <Card className="h-full border-0 shadow-sm">
+                  <CardContent className="p-6">
+                    <Quote className="w-8 h-8 text-accent/20 mb-4" />
+                    <p className="text-foreground mb-6 leading-relaxed">
+                      "{testimonial.quote}"
+                    </p>
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 rounded-full bg-accent/10 flex items-center justify-center">
+                        <span className="text-accent font-semibold">
+                          {testimonial.name.split(' ').map(n => n[0]).join('')}
+                        </span>
+                      </div>
+                      <div>
+                        <p className="font-semibold text-sm">{testimonial.name}</p>
+                        <p className="text-xs text-muted-foreground">{testimonial.role}</p>
+                        <p className="text-xs text-muted-foreground">{testimonial.company}</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ================================================================== */}
+      {/* BOTTOM CTA SECTION */}
+      {/* ================================================================== */}
+      <section 
+        className="py-24 px-8"
+        {...dataAttributes.section("bottom-cta")}
+      >
+        <div className="max-w-5xl mx-auto">
           <motion.div
             className="bg-foreground text-background rounded-3xl p-12 text-center"
             initial={{ opacity: 0, y: 20 }}
@@ -648,17 +997,30 @@ export default function LandingPage() {
               Ready to bring AI to your hospital?
             </h2>
             <p className="text-lg text-background/70 mb-8 max-w-2xl mx-auto">
-              See how Scrub can transform your clinical workflows with AI that installs in minutes, not months.
+              Join healthcare organizations deploying clinical AI in days, not months. 
+              Free to start, no credit card required.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Button size="lg" asChild className="bg-accent hover:bg-accent/90 text-white px-8">
-                <Link href="/demo">
-                  <PlayCircle className="w-5 h-5 mr-2" />
-                  See Demo
+              <Button 
+                size="lg" 
+                asChild 
+                className="bg-accent hover:bg-accent/90 text-white px-8"
+                onClick={() => trackCTA("signup", "bottom-cta")}
+                {...dataAttributes.cta("signup", "bottom-cta")}
+              >
+                <Link href="/portal/auth">
+                  Get Scrub Free
+                  <ArrowRight className="w-4 h-4 ml-2" />
                 </Link>
               </Button>
-              <Button size="lg" variant="outline" className="border-background/20 text-background hover:bg-background/10 bg-transparent px-8">
-                Schedule a Call
+              <Button 
+                size="lg" 
+                variant="outline" 
+                className="border-background/20 text-background hover:bg-background/10 bg-transparent px-8"
+                onClick={() => trackCTA("contact-sales", "bottom-cta")}
+                {...dataAttributes.cta("contact-sales", "bottom-cta")}
+              >
+                Talk to Sales
               </Button>
             </div>
           </motion.div>
@@ -666,27 +1028,7 @@ export default function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t py-12 px-6">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-foreground flex items-center justify-center">
-                <span className="text-background font-bold text-lg">S</span>
-              </div>
-              <span className="font-semibold text-lg">Scrub</span>
-            </div>
-            <div className="flex items-center gap-8 text-sm text-muted-foreground">
-              <a href="#" className="hover:text-foreground transition-colors">Privacy</a>
-              <a href="#" className="hover:text-foreground transition-colors">Terms</a>
-              <a href="#" className="hover:text-foreground transition-colors">Security</a>
-              <a href="#" className="hover:text-foreground transition-colors">Contact</a>
-            </div>
-            <p className="text-sm text-muted-foreground">
-              © 2026 Scrub. All rights reserved.
-            </p>
-          </div>
-        </div>
-      </footer>
+      <LandingFooter />
     </div>
   );
 }
