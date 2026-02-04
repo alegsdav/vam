@@ -11,9 +11,9 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          "bg-foreground text-background hover:bg-foreground/90 shadow-sm",
+          "bg-foreground text-background hover:bg-foreground/90",
         accent:
-          "bg-accent text-accent-foreground hover:bg-accent/90 shadow-sm",
+          "bg-accent text-accent-foreground hover:bg-accent/90",
         outline:
           "border border-border bg-transparent hover:bg-muted hover:border-muted-foreground/20",
         ghost: "hover:bg-muted",
@@ -38,7 +38,7 @@ const buttonVariants = cva(
 
 export interface ButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement>,
-    VariantProps<typeof buttonVariants> {
+  VariantProps<typeof buttonVariants> {
   asChild?: boolean;
 }
 

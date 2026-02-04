@@ -8,8 +8,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "VSee AI Marketplace | Healthcare AI Infrastructure",
-  description: "The enterprise-grade enablement layer for AI in healthcare. Discover, activate, and integrate AI capabilities through VSee Cloud.",
+  title: "Scrub",
+  description: "AI for healthcare",
 };
 
 export default function RootLayout({

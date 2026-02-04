@@ -5,35 +5,35 @@
   --background: 0 0% 100%;
   --background-secondary: 0 0% 98%;
   --foreground: 0 0% 8%;
-  
+
   /* Subtle grays */
   --muted: 0 0% 96%;
   --muted-foreground: 0 0% 45%;
-  
+
   /* Card/surface */
   --card: 0 0% 100%;
   --card-foreground: 0 0% 8%;
-  
+
   /* Borders */
   --border: 0 0% 90%;
   --border-subtle: 0 0% 94%;
-  
+
   /* Single accent color - lime green */
-  --accent: 82 85% 45%;
+  --accent: 82 85% 35%;
   --accent-foreground: 0 0% 100%;
   --accent-muted: 82 40% 95%;
-  
+
   /* Status colors (muted versions) */
   --success: 142 71% 45%;
   --warning: 38 92% 50%;
   --error: 0 72% 51%;
-  
+
   /* Dark variant for contrast sections */
   --dark-bg: 0 0% 4%;
   --dark-card: 0 0% 8%;
   --dark-border: 0 0% 15%;
   --dark-muted: 0 0% 20%;
-  
+
   /* Typography */
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
   --font-display: 'Instrument Serif', Georgia, serif;
@@ -60,7 +60,7 @@
   --color-dark-card: hsl(var(--dark-card));
   --color-dark-border: hsl(var(--dark-border));
   --color-dark-muted: hsl(var(--dark-muted));
-  
+
   --font-sans: var(--font-sans);
   --font-display: var(--font-display);
   --font-mono: var(--font-mono);
