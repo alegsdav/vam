@@ -3,19 +3,18 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { 
+import {
   Home,
   Inbox,
   CreditCard,
   Boxes,
-  Key,
   FlaskConical,
   Building2,
   Shield,
   FileText,
   Store,
   Settings,
-  LogOut, 
+  LogOut,
   HelpCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -52,7 +51,6 @@ const sidebarSections: SidebarSection[] = [
     label: "Projects",
     items: [
       { id: "modules", title: "My AI Modules", icon: Boxes, href: "/portal/startup" },
-      { id: "api-keys", title: "API Keys", icon: Key, href: "/portal/developer" },
       { id: "sandbox", title: "Sandbox", icon: FlaskConical, href: "/portal/sandbox" },
     ]
   },
@@ -110,18 +108,18 @@ function PortalLayoutInner({
                   </span>
                 </div>
               )}
-              
+
               {/* Divider before non-labeled sections (except first) */}
               {!section.label && sectionIndex > 0 && (
                 <div className="my-4 border-t" />
               )}
-              
+
               {/* Section Items */}
               <div className="space-y-1">
                 {section.items.map((item) => {
-                  const isActive = pathname === item.href || 
+                  const isActive = pathname === item.href ||
                     (item.href !== "/portal" && pathname?.startsWith(item.href));
-                  
+
                   const linkContent = (
                     <>
                       <item.icon className={`w-5 h-5 ${isActive ? '' : 'group-hover:text-foreground'}`} />
@@ -133,32 +131,30 @@ function PortalLayoutInner({
                       )}
                     </>
                   );
-                  
+
                   if (item.external) {
                     return (
                       <Link
                         key={item.id}
                         href={item.href}
-                        className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all group ${
-                          isActive 
-                            ? "bg-foreground text-background" 
-                            : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                        }`}
+                        className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all group ${isActive
+                          ? "bg-foreground text-background"
+                          : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                          }`}
                       >
                         {linkContent}
                       </Link>
                     );
                   }
-                  
+
                   return (
                     <Link
                       key={item.id}
                       href={item.href}
-                      className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all group ${
-                        isActive 
-                          ? "bg-foreground text-background" 
-                          : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                      }`}
+                      className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all group ${isActive
+                        ? "bg-foreground text-background"
+                        : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                        }`}
                     >
                       {linkContent}
                     </Link>
@@ -175,7 +171,7 @@ function PortalLayoutInner({
             <HelpCircle className="w-5 h-5" />
             <span>Help & Support</span>
           </button>
-          <button 
+          <button
             onClick={handleSignOut}
             className="flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-muted-foreground hover:bg-muted hover:text-foreground transition-all w-full"
           >
@@ -230,7 +226,7 @@ export default function PortalLayout({
   useEffect(() => {
     const getProfile = async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      
+
       if (!user) {
         router.push("/portal/auth");
         return;

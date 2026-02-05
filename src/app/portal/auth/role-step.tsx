@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Users, Building2, Rocket, Code2, Loader2, CheckCircle2 } from "lucide-react";
+import { Users, Building2, Rocket, Loader2, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { createClient } from "@/lib/supabase/client";
@@ -26,19 +26,13 @@ const roleOptions = [
     description: "Submit and manage your AI modules",
     icon: Rocket,
   },
-  {
-    id: "is_developer",
-    label: "Developer",
-    description: "Access SDK and documentation",
-    icon: Code2,
-  },
 ];
 
 export function RoleStep({ data, updateData }: Props) {
   const [roles, setRoles] = useState(data.roles);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
+
   const router = useRouter();
   const supabase = createClient();
 
@@ -49,7 +43,7 @@ export function RoleStep({ data, updateData }: Props) {
     }));
   };
 
-  const hasSelection = roles.is_it || roles.is_startup || roles.is_developer;
+  const hasSelection = roles.is_it || roles.is_startup;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -82,7 +76,7 @@ export function RoleStep({ data, updateData }: Props) {
       }
 
       updateData({ roles });
-      
+
       // Redirect to portal
       router.push("/portal");
     } catch (err) {
@@ -96,7 +90,7 @@ export function RoleStep({ data, updateData }: Props) {
       <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-accent/10 mb-6">
         <Users className="w-8 h-8 text-accent" />
       </div>
-      
+
       <h1 className="text-3xl font-bold mb-2">What describes you?</h1>
       <p className="text-muted-foreground mb-8">
         Select all that apply. This helps us personalize your experience.
@@ -106,32 +100,29 @@ export function RoleStep({ data, updateData }: Props) {
         <div className="space-y-3">
           {roleOptions.map((role) => {
             const isSelected = roles[role.id as keyof typeof roles];
-            
+
             return (
               <Card
                 key={role.id}
-                className={`cursor-pointer transition-all ${
-                  isSelected
-                    ? "border-accent bg-accent/5 shadow-md"
-                    : "hover:border-muted-foreground/30"
-                }`}
+                className={`cursor-pointer transition-all ${isSelected
+                  ? "border-accent bg-accent/5 shadow-md"
+                  : "hover:border-muted-foreground/30"
+                  }`}
                 onClick={() => toggleRole(role.id)}
               >
                 <CardContent className="p-4 flex items-center gap-4">
-                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
-                    isSelected ? "bg-accent text-white" : "bg-muted"
-                  }`}>
+                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${isSelected ? "bg-accent text-white" : "bg-muted"
+                    }`}>
                     <role.icon className="w-6 h-6" />
                   </div>
                   <div className="flex-1 text-left">
                     <p className="font-semibold">{role.label}</p>
                     <p className="text-sm text-muted-foreground">{role.description}</p>
                   </div>
-                  <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
-                    isSelected
-                      ? "border-accent bg-accent"
-                      : "border-muted-foreground/30"
-                  }`}>
+                  <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${isSelected
+                    ? "border-accent bg-accent"
+                    : "border-muted-foreground/30"
+                    }`}>
                     {isSelected && <CheckCircle2 className="w-4 h-4 text-white" />}
                   </div>
                 </CardContent>
@@ -144,8 +135,8 @@ export function RoleStep({ data, updateData }: Props) {
           <p className="text-sm text-red-500">{error}</p>
         )}
 
-        <Button 
-          type="submit" 
+        <Button
+          type="submit"
           className="w-full h-12 bg-accent hover:bg-accent/90 text-white"
           disabled={!hasSelection || isLoading}
         >
